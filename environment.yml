@@ -1,0 +1,23 @@
+name: nexrad
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8 # Python version 3.6
+  - black # clean code and make it pretty
+  - bottleneck # C-optimized array functions for NumPy
+  - cartopy # Geographic plotting toolkit
+  - cfgrib # to read in grib files
+  - dask # Parallel processing library
+  - ipython #
+  - jupyterlab
+  - matplotlib # 2D plotting library
+  - mypy # type checking
+  - netcdf4 # Wrapper for netcdf4
+  - numpy # N-d array and numerics
+  - pandas # Labeled array library
+  - pylint # catch errors before you make them
+  - scipy # Common math/stats/science functions
+  - seaborn # Statistical visualizations
+  - tqdm # Nice progressbar for longer computations
+  - xarray # N-d labeled array library
