@@ -21,6 +21,20 @@ conda activate nexrad # activate environment
 pip install -e . # install local package
 ```
 
+## To run
+
+Once you have installed,
+
+```shell
+snakemake --cores <n_cores>
+```
+
+where `<n_cores>` is the number of cores you want to use.
+1 is a safe default if you don't want to multithread, but it this will take a while -- reading in each `.grib2` file takes on the order of 10 seconds, and there is a file for each hour.
+
+If you want to change the spatial domain retained as a `.nc` file, edit `config.yml`.
+If you want to change the time domain, edit `Snakefile`.
+
 ## To do
 
 This is a work in progress!
