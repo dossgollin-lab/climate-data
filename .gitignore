@@ -1,2 +1,4 @@
-
+*.grib2
 *.nc
+.snakemake/
+*.egg-info/
