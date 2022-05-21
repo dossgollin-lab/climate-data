@@ -1,7 +1,8 @@
 # NEXRAD-xarray
 
 This is a **work in progress**!
-Use this software with caution, but if you find it helpful please consider using the `Issues` tab to identify problems or suggest improvements.
+Use this software **with caution**!
+If you find it helpful please consider using the `Issues` tab to identify problems or suggest improvements.
 
 This program will create a database of NEXRAD radar precipitation data in formats that are easy to use for analysis, specifically Netcdf4 files that play nicely with the [Pangeo](https://pangeo.io/) ecosystem and can be stored on a local hard drive.
 Conceptually, the steps are:
