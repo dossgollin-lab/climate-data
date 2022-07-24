@@ -13,7 +13,7 @@ import xarray as xr
 from codebase import nexrad
 from codebase.path import datadir, scriptdir
 
-T_START = datetime(2022, 4, 15, 0)  # the first time to collect
+T_START = datetime(2000, 1, 1, 0)  # the first time to collect
 T_END = datetime(2022, 4, 19, 23)  # the last time to collect
 
 # a table of all the raw files and filenames

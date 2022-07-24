@@ -41,3 +41,7 @@ where `<n_cores>` is the number of cores you want to use.
 
 If you want to change the spatial domain retained as a `.nc` file, edit `config.yml`.
 If you want to change the time domain, edit the `Snakefile`.
+
+## Why is this useful?
+
+Take a look at `example_usecase.ipynb` to see how this data can be used
