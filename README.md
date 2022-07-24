@@ -5,7 +5,9 @@ Use this software **with caution**!
 If you find it helpful please consider using the `Issues` tab to identify problems or suggest improvements.
 
 This program will create a database of NEXRAD radar precipitation data in formats that are easy to use for analysis, specifically Netcdf4 files that play nicely with the [Pangeo](https://pangeo.io/) ecosystem and can be stored on a local hard drive.
-Conceptually, the steps are:
+Specifically, we use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
+
+Conceptually, the steps of our analysis are:
 
 1. Download the raw data. The raw data is stored in compressed format on Iowa State's servers, with one `.grib2` file corresponding to one time step ("snapshot", i.e. one hour). Once the data is downloaded, it is decompressed it is stored in `./data/grib2/`. This data format is relatively compressed, so each file is of order 500kB.
 1. Use `xarray` to read in each `.grib2` file and save a spatial subset of it (set the boundaries in `config.yml`) as a netcdf4 file. Although these files are less compressed, they are much faster to read in. This step is rather slow because it takes a while (~10 seconds per snapshot) for `xarray` to parse the `.grib2` files correctly.
