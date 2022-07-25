@@ -1,64 +1,147 @@
 import datetime
-from multiprocessing.sharedctypes import Value
+import os
+from tqdm import tqdm
+from typing import NamedTuple, Union
 from urllib.request import urlretrieve
 
+from numpy import float32
+import pandas as pd
 import xarray as xr
 
-from .path import datadir
+from .const import MISSING_SNAPSHOTS
+from .namingconventions import *
 
 
-def ensure_valid_date(dt: datetime.date):
-    """Make sure the date entered is valid"""
-    sdate = datetime.datetime(2000, 1, 1, 0)  # TODO: is this really the first day?
-    if dt < sdate:
-        dt_str = dt.strftime("%Y%m%d-%H%M%S")
-        raise ValueError(f"Data is not available for {dt_str}")
+class BoundingBox:
+    def __init__(
+        self,
+        lonmin: float,
+        lonmax: float,
+        latmin: float,
+        latmax: float,
+    ) -> None:
+
+        assert latmax > latmin
+        assert -90 <= latmax <= 90
+        assert -90 <= latmin <= 90
+
+        assert lonmax > lonmin
+        assert 0 <= lonmin <= 360
+        assert 0 <= lonmax <= 360
+
+        self.latmin = latmin
+        self.latmax = latmax
+        self.lonmin = lonmin
+        self.lonmax = lonmax
 
 
-def get_varname(dt: datetime.date):
+def assert_valid_datetime(dt: datetime.datetime) -> None:
     """
-    Get the variable name for a particular date-time snapshot
-
-    Refer to email from Jian Zhang, July 7 2022
+    Do any needed checks on the data
     """
-    ensure_valid_date(dt)
-    cutoff = datetime.date(2020, 10, 1)  # TODO: update, this isn't exact yet
-    if dt > cutoff:
-        var = "MultiSensor_QPE_01H_Pass2"
-    else:
-        var = "GaugeCorr_QPE_01H"
-
-    return var
-
-
-def gz_fname(dt: datetime.date, local=False):
-    """
-    Get the filename of the `.grib2.gz` file.
-    If `local=True` then returns the full local path.
-    """
-    varname = get_varname(dt)
     dt_str = dt.strftime("%Y%m%d-%H%M%S")
-    fname = f"{varname}_00.00_{dt_str}.grib2.gz" # TODO: make sure this is the right format
-    if local:
-        fname = datadir(fname)
-    return fname
+    assert dt >= STIME, f"Data is not available for {dt_str}"
+    assert dt.minute == 0
+    assert dt.second == 0
+    assert dt.microsecond == 0
 
 
-def grib2_fname(dt: datetime.date):
-    """
-    Get the local .grib2 filename for a given date time
-    """
-    return gz_fname(dt).replace(".grib2.gz", ".grib2")
+class TimeRange:
+    """Shallow rapper for pandas.date_range with some checks"""
+
+    def __init__(self, stime: datetime.datetime, etime: datetime.datetime) -> None:
+
+        assert_valid_datetime(stime)
+        assert_valid_datetime(etime)
+        self.dts = pd.date_range(stime, etime, freq="H")
 
 
-def get_url(dt: datetime.date):
-    """
-    Get the URl of the file for a particular date-time snapshot
-    """
-    date_str = dt.strftime("%Y/%m/%d")
-    fname = gz_fname(dt)
-    return (
-        f"https://mtarchive.geol.iastate.edu/"
-        f"{date_str}/mrms/ncep/MultiSensor_QPE_01H_Pass2/"
-        f"{fname}"
-    )
+# TODO: is there a better type for paths / way to handle them?
+def assert_valid_path(path: str) -> None:
+    """Make sure the path is valid"""
+    assert os.path.exists(path), "invalid path given"
+
+
+class PrecipSnapshot:
+    def __init__(self, dt: datetime.datetime, dirname: str, bbox: BoundingBox) -> None:
+
+        # check inputs
+        assert_valid_datetime(dt)
+        assert_valid_path(dirname)
+
+        self.dt = dt
+        self.bbox = bbox
+        self.date: Union[xr.DataArray, None] = None  # initialize with blank data
+
+        self._data_loaded = False
+        self._dirname = os.path.abspath(dirname)  # track relative paths
+        self._grib2_fname: Union[str, None] = None  # is the grib2 file downloaded?
+        self._nc_fname: Union[str, None] = None
+
+    def _download_grib2(self) -> None:
+        """Download the grib2 data and save to file"""
+        fname = get_grib2_fname(self.dt)
+        raise NotImplementedError
+        self._grib2_fname = os.path.join(self._dirname, fname)
+
+    def _extract_nc(self, bbox: BoundingBox) -> None:
+        """Extract the netcdf4 data, trim to bounding box, and save to file"""
+
+        assert self._grib2_fname, "grib2 file not found"
+        nc_fname = get_nc_fname(self.dt)
+        ds = (
+            xr.load_dataarray(self._grib2_fname)
+            .sel(
+                longitude=slice(self.bbox.lonmin, self.bbox.lonmax),
+                latitude=slice(self.bbox.latmax, self.bbox.latmin),
+            )
+            .astype(float32)
+        )
+        ds.name = "precip_rate"
+        ds.to_netcdf(nc_fname, format="netcdf4")
+        self._nc_fname = os.path.join(self._dirname, nc_fname)
+
+    def ensure_data(self) -> None:
+        """Make sure the grib2 and netcdf files are where they should be"""
+        if not self._grib2_fname:
+            self._download_grib2()
+        if not self._nc_fname:
+            self._extract_nc(self.bbox)
+        self._data_loaded = True
+
+    @property
+    def data(self) -> xr.Dataset:
+        """Get the snapshot's data"""
+        if self._data_loaded:
+            return xr.open_dataset(self._nc_fname)
+        else:
+            raise ValueError("File {self._nc_fname} not yet created")
+
+
+class PrecipDataSet:
+    def __init__(self, trange: TimeRange, bbox: BoundingBox, dirname: str) -> None:
+
+        self.trange = trange
+        self.bbox = bbox
+        assert_valid_path(dirname)
+        self._dirname = dirname
+        self.data: Union[xr.DataArray, None] = None  # initialize blank
+        self._snapshots = [
+            PrecipSnapshot(dt=dt, dirname=self._dirname, bbox=self.bbox)
+            for dt in self.trange.dts
+        ]
+
+    def get_data(self) -> xr.Dataset:
+        """Read in the data from each snapshot"""
+
+        # TODO parallelize?
+        # make sure each data point has accessed the data
+        for snapshot in tqdm(self._snapshots):
+            snapshot.ensure_data()
+
+        # load all the data as an mfdataset
+        return xr.open_mfdataset(
+            [snapshot._nc_fname for snapshot in self._snapshots],
+            combine="nested",
+            concat_dim="time",
+        ).sortby("time")
