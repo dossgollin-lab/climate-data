@@ -7,8 +7,10 @@ dependencies:
   - python=3.8 # Python version 3.6
   - black # clean code and make it pretty
   - bottleneck # C-optimized array functions for NumPy
+  - cartopy # mapping
   - cfgrib # to read in grib files
   - dask # Parallel processing library
+  - matplotlib # mapping
   - mypy # type checking
   - netcdf4 # Wrapper for netcdf4
   - numpy # N-d array and numerics

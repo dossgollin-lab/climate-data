@@ -1,46 +1,61 @@
-import datetime
 import os
+from datetime import datetime
+import logging
 from tqdm import tqdm
 from typing import NamedTuple, Union
-from urllib.request import urlretrieve
 
-from numpy import float32
+
+import numpy as np
 import pandas as pd
 import xarray as xr
 
 from .const import MISSING_SNAPSHOTS
 from .namingconventions import *
+from .util import download_file, unzip_gz, delete_file, ensure_dir
 
 
 class BoundingBox:
     def __init__(
         self,
-        lonmin: float,
-        lonmax: float,
-        latmin: float,
-        latmax: float,
+        lonmin: float = 230,
+        lonmax: float = 300,
+        latmin: float = 20,
+        latmax: float = 55,
     ) -> None:
-
-        assert latmax > latmin
-        assert -90 <= latmax <= 90
-        assert -90 <= latmin <= 90
-
-        assert lonmax > lonmin
-        assert 0 <= lonmin <= 360
-        assert 0 <= lonmax <= 360
+        """
+        Bounding box for the data to retain.
+        The valid boundaries are lon in [230, 300] and lat in [20, 55]
+        """
 
         self.latmin = latmin
         self.latmax = latmax
         self.lonmin = lonmin
         self.lonmax = lonmax
 
+        self.assert_valid_longitudes()
+        self.assert_valid_latitudes()
 
-def assert_valid_datetime(dt: datetime.datetime) -> None:
+    def assert_valid_longitudes(self) -> None:
+        """Make sure the longitudes are valid"""
+        assert (
+            self.lonmin < self.lonmax
+        ), "min longitude must be less than max longitude"
+        assert self.lonmin >= 230, "min longitude must be at least 230"
+        assert self.lonmax <= 300, "max longitude must be no greater than 300"
+
+    def assert_valid_latitudes(self) -> None:
+        """Make sure the latitudes are valid"""
+        assert self.latmin < self.latmax, "min latitude must be less than max latitude"
+        assert self.latmin >= 20, "min latitude must be at least 20"
+        assert self.latmax <= 55, "max latitude must be at least 55"
+
+
+def assert_valid_datetime(dt: datetime) -> None:
     """
     Do any needed checks on the data
     """
     dt_str = dt.strftime("%Y%m%d-%H%M%S")
-    assert dt >= STIME, f"Data is not available for {dt_str}"
+    assert dt >= GAUGECORR_BEGINTIME, f"Data is not available for {dt_str}"
     assert dt.minute == 0
     assert dt.second == 0
     assert dt.microsecond == 0
@@ -49,21 +64,39 @@ def assert_valid_datetime(dt: datetime.datetime) -> None:
 class TimeRange:
     """Shallow rapper for pandas.date_range with some checks"""
 
-    def __init__(self, stime: datetime.datetime, etime: datetime.datetime) -> None:
+    def __init__(self, stime: datetime, etime: datetime) -> None:
 
         assert_valid_datetime(stime)
         assert_valid_datetime(etime)
         self.dts = pd.date_range(stime, etime, freq="H")
 
 
-# TODO: is there a better type for paths / way to handle them?
 def assert_valid_path(path: str) -> None:
     """Make sure the path is valid"""
-    assert os.path.exists(path), "invalid path given"
+    assert os.path.isdir(path), f"invalid path given: {path}"
+
+
+def bbox_equal(ds: xr.DataArray, bbox: BoundingBox):
+    """
+    Check if the bounding box of the data is equal to the given bounding box
+    """
+    delta = 0.1
+
+    lonmin = ds.longitude.min()
+    lonmax = ds.longitude.max()
+    latmin = ds.latitude.min()
+    latmax = ds.latitude.max()
+
+    return (
+        bbox.lonmin <= lonmin <= bbox.lonmin + delta
+        and bbox.lonmax >= lonmax >= bbox.lonmax - delta
+        and bbox.latmin <= latmin <= bbox.latmin + delta
+        and bbox.latmax >= latmax >= bbox.latmax - delta
+    )
 
 
 class PrecipSnapshot:
-    def __init__(self, dt: datetime.datetime, dirname: str, bbox: BoundingBox) -> None:
+    def __init__(self, dt: datetime, dirname: str, bbox: BoundingBox) -> None:
 
         # check inputs
         assert_valid_datetime(dt)
@@ -73,46 +106,70 @@ class PrecipSnapshot:
         self.bbox = bbox
         self.date: Union[xr.DataArray, None] = None  # initialize with blank data
 
-        self._data_loaded = False
-        self._dirname = os.path.abspath(dirname)  # track relative paths
-        self._grib2_fname: Union[str, None] = None  # is the grib2 file downloaded?
-        self._nc_fname: Union[str, None] = None
+        dirname = os.path.abspath(dirname)  # track relative paths
+        if not os.path.isdir(dirname):
+            os.makedirs(dirname)
+
+        self._grib2_fname = os.path.join(dirname, get_grib2_fname(self.dt))
+        self._gz_fname = os.path.join(dirname, get_gz_fname(self.dt))
+        self._nc_fname = os.path.join(dirname, get_nc_fname(self.dt))
+
+        # the grib2 file is unchanged so if it exists it should be right
+        self._grib2_loaded = os.path.isfile(self._grib2_fname)
+
+        # the netcdf4 file depends on the bounding box
+        self._nc_loaded = False
+        if os.path.isfile(self._nc_fname):
+            ds = xr.open_dataset(self._nc_fname)
+            if bbox_equal(ds, self.bbox):
+                self._nc_loaded = True
 
     def _download_grib2(self) -> None:
         """Download the grib2 data and save to file"""
-        fname = get_grib2_fname(self.dt)
-        raise NotImplementedError
-        self._grib2_fname = os.path.join(self._dirname, fname)
+        url = get_url(self.dt)
+
+        logging.info(f"Downloading data from {url} and saving to {self._gz_fname}")
+        download_file(url=url, fname=self._gz_fname)
+
+        logging.info(f"Unzipping from {self._gz_fname} to {self._grib2_fname}")
+        unzip_gz(fname_in=self._gz_fname, fname_out=self._grib2_fname)
+        delete_file(self._gz_fname)
+        self._grib2_fname = self._grib2_fname
 
     def _extract_nc(self, bbox: BoundingBox) -> None:
         """Extract the netcdf4 data, trim to bounding box, and save to file"""
 
         assert self._grib2_fname, "grib2 file not found"
-        nc_fname = get_nc_fname(self.dt)
+
+        logging.info(
+            f"Extracting netcdf4 data from {self._grib2_fname} to {self._nc_fname}"
+        )
         ds = (
             xr.load_dataarray(self._grib2_fname)
             .sel(
                 longitude=slice(self.bbox.lonmin, self.bbox.lonmax),
                 latitude=slice(self.bbox.latmax, self.bbox.latmin),
             )
-            .astype(float32)
+            .astype(np.float32)
         )
+        ds = ds.where(
+            ds != -3
+        )  # add a mask for missing data TODO: should be a better way
         ds.name = "precip_rate"
-        ds.to_netcdf(nc_fname, format="netcdf4")
-        self._nc_fname = os.path.join(self._dirname, nc_fname)
+        ds.to_netcdf(self._nc_fname, format="netcdf4")
+        self._nc_loaded = True
 
     def ensure_data(self) -> None:
         """Make sure the grib2 and netcdf files are where they should be"""
-        if not self._grib2_fname:
+        if not self._grib2_loaded:
             self._download_grib2()
-        if not self._nc_fname:
+        if not self._nc_loaded:
             self._extract_nc(self.bbox)
-        self._data_loaded = True
 
     @property
     def data(self) -> xr.Dataset:
         """Get the snapshot's data"""
-        if self._data_loaded:
+        if self._nc_loaded:
             return xr.open_dataset(self._nc_fname)
         else:
             raise ValueError("File {self._nc_fname} not yet created")
@@ -123,7 +180,7 @@ class PrecipDataSet:
 
         self.trange = trange
         self.bbox = bbox
-        assert_valid_path(dirname)
+        ensure_dir(dirname)
         self._dirname = dirname
         self.data: Union[xr.DataArray, None] = None  # initialize blank
         self._snapshots = [
@@ -131,10 +188,10 @@ class PrecipDataSet:
             for dt in self.trange.dts
         ]
 
-    def get_data(self) -> xr.Dataset:
+    def get_data(self) -> xr.DataArray:
         """Read in the data from each snapshot"""
 
-        # TODO parallelize?
+        # TODO parallelize this step
         # make sure each data point has accessed the data
         for snapshot in tqdm(self._snapshots):
             snapshot.ensure_data()
@@ -144,4 +201,5 @@ class PrecipDataSet:
             [snapshot._nc_fname for snapshot in self._snapshots],
             combine="nested",
             concat_dim="time",
-        ).sortby("time")
+            chunks={"time": 10},
+        ).sortby("time")["precip_rate"]
