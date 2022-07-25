@@ -4,3 +4,4 @@
 *.egg-info/
 data/external/*
 *.png
+*.log
