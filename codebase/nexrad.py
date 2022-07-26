@@ -102,7 +102,17 @@ def bbox_equal(ds: xr.DataArray, bbox: BoundingBox):
 
 
 class PrecipSnapshot:
-    def __init__(self, dt: datetime, dirname: str, bbox: BoundingBox) -> None:
+    def __init__(
+        self,
+        dt: datetime,
+        bbox: BoundingBox,
+        dirname: str,
+    ) -> None:
+        """
+        A single precipitation snapshot corresponds to a particular datetime and
+        bounding box. Its filename is a function of the datetime, but a path
+        can be specified.
+        """
 
         # check inputs
         assert_valid_datetime(dt)
@@ -113,12 +123,11 @@ class PrecipSnapshot:
         self.date: Union[xr.DataArray, None] = None  # initialize with blank data
 
         dirname = os.path.abspath(dirname)  # track relative paths
-        if not os.path.isdir(dirname):
-            os.makedirs(dirname)
+        ensure_dir(dirname)
 
-        self._grib2_fname = os.path.join(dirname, get_grib2_fname(self.dt))
-        self._gz_fname = os.path.join(dirname, get_gz_fname(self.dt))
-        self._nc_fname = os.path.join(dirname, get_nc_fname(self.dt))
+        self._grib2_fname = get_grib2_fname(dt=self.dt, dirname=dirname)
+        self._gz_fname = get_gz_fname(dt=self.dt, dirname=dirname)
+        self._nc_fname = get_nc_fname(dt=self.dt, dirname=dirname)
 
         # the grib2 file is unchanged so if it exists it should be right
         self._grib2_loaded = os.path.isfile(self._grib2_fname)
