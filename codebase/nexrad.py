@@ -68,7 +68,13 @@ class TimeRange:
 
         assert_valid_datetime(stime)
         assert_valid_datetime(etime)
-        self.dts = pd.date_range(stime, etime, freq="H")
+        self.stime = stime
+        self.etime = etime
+        self.dts = pd.date_range(self.stime, self.etime, freq="H")
+
+    def printbounds(self) -> str:
+        fmt = "%Y-%m-%d %H:%M:%S"
+        return self.stime.strftime(fmt) + " to " + self.etime.strftime(fmt)
 
 
 def assert_valid_path(path: str) -> None:
@@ -145,7 +151,7 @@ class PrecipSnapshot:
             f"Extracting netcdf4 data from {self._grib2_fname} to {self._nc_fname}"
         )
         ds = (
-            xr.load_dataarray(self._grib2_fname)
+            xr.open_dataarray(self._grib2_fname, engine="cfgrib")
             .sel(
                 longitude=slice(self.bbox.lonmin, self.bbox.lonmax),
                 latitude=slice(self.bbox.latmax, self.bbox.latmin),
