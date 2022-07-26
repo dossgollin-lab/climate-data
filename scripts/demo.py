@@ -4,6 +4,7 @@ import logging
 import os
 
 import cartopy.crs as ccrs
+from cartopy.feature import STATES
 import matplotlib.pyplot as plt
 
 import codebase
@@ -16,10 +17,10 @@ def main():
 
     # define the bounding box for the data -- this is roughly Texas
     bbox = codebase.BoundingBox(
-        lonmin=252,
-        lonmax=268,
+        lonmin=260,
+        lonmax=290,
         latmin=25,
-        latmax=37,
+        latmax=40,
     )
 
     # define time boundaries -- August 2017 is when Harvey happened
@@ -27,7 +28,7 @@ def main():
         stime=datetime(2017, 8, 1, 0), etime=datetime(2017, 8, 31, 23)
     )
 
-    # create the (abstract dataset)
+    # create the dataset abstraction
     dataset = codebase.PrecipDataSet(
         trange=trange,
         bbox=bbox,
@@ -49,6 +50,7 @@ def main():
     )
     plt.title(f"Total Precip, {trange.printbounds()}")
     p.axes.coastlines()
+    p.axes.add_feature(STATES, edgecolor="black", linewidth=0.5)
     plt.savefig(os.path.join(os.curdir, "demo.png"))
 
 

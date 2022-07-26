@@ -77,11 +77,6 @@ class TimeRange:
         return self.stime.strftime(fmt) + " to " + self.etime.strftime(fmt)
 
 
-def assert_valid_path(path: str) -> None:
-    """Make sure the path is valid"""
-    assert os.path.isdir(path), f"invalid path given: {path}"
-
-
 def bbox_equal(ds: xr.DataArray, bbox: BoundingBox):
     """
     Check if the bounding box of the data is equal to the given bounding box
@@ -107,6 +102,7 @@ class PrecipSnapshot:
         dt: datetime,
         bbox: BoundingBox,
         dirname: str,
+        **kwargs,
     ) -> None:
         """
         A single precipitation snapshot corresponds to a particular datetime and
@@ -114,20 +110,24 @@ class PrecipSnapshot:
         can be specified.
         """
 
-        # check inputs
+        # the date / time
         assert_valid_datetime(dt)
-        assert_valid_path(dirname)
-
         self.dt = dt
+
+        # the bounding box
         self.bbox = bbox
-        self.date: Union[xr.DataArray, None] = None  # initialize with blank data
 
-        dirname = os.path.abspath(dirname)  # track relative paths
+        # the directory to save the files to
         ensure_dir(dirname)
+        dirname = os.path.abspath(dirname)
 
+        # the file names
         self._grib2_fname = get_grib2_fname(dt=self.dt, dirname=dirname)
         self._gz_fname = get_gz_fname(dt=self.dt, dirname=dirname)
         self._nc_fname = get_nc_fname(dt=self.dt, dirname=dirname)
+
+        # compression for the resulting netcdf file
+        self._complevel = kwargs.pop("complevel", 4)
 
         # the grib2 file is unchanged so if it exists it should be right
         self._grib2_loaded = os.path.isfile(self._grib2_fname)
@@ -135,7 +135,7 @@ class PrecipSnapshot:
         # the netcdf4 file depends on the bounding box
         self._nc_loaded = False
         if os.path.isfile(self._nc_fname):
-            ds = xr.open_dataset(self._nc_fname)
+            ds = xr.open_dataarray(self._nc_fname)
             if bbox_equal(ds, self.bbox):
                 self._nc_loaded = True
 
@@ -171,7 +171,11 @@ class PrecipSnapshot:
             ds != -3
         )  # add a mask for missing data TODO: should be a better way
         ds.name = "precip_rate"
-        ds.to_netcdf(self._nc_fname, format="netcdf4")
+        ds.to_netcdf(
+            self._nc_fname,
+            format="netcdf4",
+            encoding={"precip_rate": {"zlib": True, "complevel": self._complevel}},
+        )
         self._nc_loaded = True
 
     def ensure_data(self) -> None:
@@ -182,10 +186,10 @@ class PrecipSnapshot:
             self._extract_nc(self.bbox)
 
     @property
-    def data(self) -> xr.Dataset:
+    def data(self) -> xr.DataArray:
         """Get the snapshot's data"""
         if self._nc_loaded:
-            return xr.open_dataset(self._nc_fname)
+            return xr.open_dataarray(self._nc_fname)
         else:
             raise ValueError("File {self._nc_fname} not yet created")
 
