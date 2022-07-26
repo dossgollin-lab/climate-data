@@ -12,4 +12,4 @@ This program creates a database of NEXRAD radar precipitation data in formats th
 ## Data variables
 
 We use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
-See [docs](./docs/) for more information.
+See [docs](./doc/) for more information.
