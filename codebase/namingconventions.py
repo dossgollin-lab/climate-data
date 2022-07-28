@@ -63,3 +63,19 @@ def get_url(dt: datetime) -> str:
     fname = get_gz_fname(dt)
     varname = get_varname(dt)
     return f"https://mtarchive.geol.iastate.edu/{date_str}/mrms/ncep/{varname}/{fname}"
+
+
+def fname2dt(fname: str) -> datetime:
+    """
+    Parse a filename to get the corresponding datetime
+    """
+    dt_str = fname.split("/")[-1].split("_")[4]
+    return datetime.strptime(dt_str, DT_FORMAT)
+
+
+def fname2url(fname: str) -> str:
+    """
+    Given the filename, get the corresponding
+    """
+    dt = fname2dt(fname)
+    return get_url(dt)
