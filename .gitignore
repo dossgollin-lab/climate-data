@@ -2,3 +2,7 @@
 *.nc
 .snakemake/
 *.egg-info/
+data/external/*
+*.png
+*.log
+logs/*

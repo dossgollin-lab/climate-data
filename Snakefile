@@ -1,60 +1,64 @@
 """
 Snakefile: see snakemake.readthedocs.io/
-We use Snakefile to collect and process required data.
 """
 
-configfile: "config.yml"
-
 from datetime import datetime
+import os
 
-import pandas as pd
-import xarray as xr
+from codebase import BoundingBox, TimeRange
+from codebase.namingconventions import get_nc_fname, fname2url
 
-from codebase import nexrad
-from codebase.path import datadir, scriptdir
-
-T_START = datetime(2000, 1, 1, 0)  # the first time to collect
-T_END = datetime(2022, 4, 19, 23)  # the last time to collect
-
-# a table of all the raw files and filenames
-snapshots = pd.DataFrame({"datetime": pd.date_range(T_START, T_END, freq="H")}).assign(
-    url=lambda df: [nexrad.get_url(dt) for dt in df.datetime],
-    local=lambda df: [datadir("grib2", nexrad.grib2_fname(dt)) for dt in df.datetime],
-    local_nc=lambda df: [
-        datadir("nc", nexrad.grib2_fname(dt).replace(".grib2", ".nc"))
-        for dt in df.datetime
-    ],
+# Define the bounding box of the analysis
+bbox = BoundingBox(
+    lonmin=260,
+    lonmax=290,
+    latmin=25,
+    latmax=40,
 )
 
+# Define the time range of the analysis
+trange = TimeRange(
+    stime=datetime(2017, 8, 1, 0), etime=datetime(2017, 8, 31, 23)
+)
 
-# this rule tells Snakemake to create all the data that is imported directly into the Jupyter notebooks
-rule default_rule:
-    input:
-        expand("{file}", file=snapshots.local_nc),
+################################################################################
+# SNAKEMAKE SETUP
+################################################################################
+
+# get netcdf files for each snapshot
+netcdf_files = [get_nc_fname(dt=dti, dirname="data/external") for dti in trange.dts] # we want to get all of the netcdf files
+
+# default rule
+rule default:
+    input: netcdf_files
+    output: "plots/demo_map.png"
+    script: "scripts/demo.py"
 
 
-# this rule downloads and unzips a raw grib file
-rule download_grib2:
-    output:
-        datadir("grib2", "{fname}"),
+
+################################################################################
+# RAW DATA
+################################################################################
+
+# this rule convert grib to netcdf
+# -r: relative time axis
+# -f nc4 specifies output format (netcdf4)
+# -z zip_1 specifies zip compression. Empirically small difference between level 1 and level 9
+# setctomiss,-3 sets all values of -3 to missing
+rule grib2_to_nc:
+    input: "{fname}.grib2" # any grib2 file in
+    output: "{fname}.nc" # creates a netcdf file
+    log: "logs/grib2_to_nc/{fname}.log"
+    conda: "envs/grib2_to_nc.yml" # use a specific environment
+    shell: "cdo -r -f nc4 -z zip_1 setctomiss,-3 -copy {input} {output}"
+
+# creates a (temporarte) grib2 file for each date-time
+# the filename is temporary, so the grib2 file is deleted once the netcdf file is created
+# first downloads using curl, then unzips using gunzip
+rule download_unzip:
+    output: temp("{fname}.grib2")
+    conda: "envs/download_unzip.yml" # use a specific environment
+    log: "logs/download_unzip/{fname}.log"
     params:
-        url=lambda wildcards: snapshots.loc[
-            lambda df: df["local"] == datadir("grib2", wildcards.fname)
-        ].url.values[0],
-    shell:
-        "curl -L {params.url} | gunzip > {output}"
-
-
-# this rule creates a netcdf4 file for each snapshot over a reduced region
-rule build_netcdf:
-    input:
-        file=datadir("grib2", "{fname}.grib2"),
-        script=scriptdir("grib_to_nc.py"),
-    params:
-        lonmin=config["limits"]["lonmin"],
-        lonmax=config["limits"]["lonmax"],
-        latmin=config["limits"]["latmin"],
-        latmax=config["limits"]["latmax"],
-    output:
-        datadir("nc", "{fname}.nc"),
-    shell: "python {input.script} --infile {input.file} --outfile {output} --lonmin {params.lonmin} --lonmax {params.lonmax} --latmin {params.latmin} --latmax {params.latmax}"
+        url=lambda wildcards: fname2url(wildcards.fname)
+    shell: "curl -L {params.url} | gunzip > {output}"

@@ -1,0 +1,5 @@
+channels:
+  - conda-forge
+dependencies:
+  - libcurl=7.83 # to download files
+  - gzip=1.12 # (un)zip

@@ -1,64 +1,70 @@
-import datetime
-from multiprocessing.sharedctypes import Value
-from urllib.request import urlretrieve
+from datetime import datetime
+from tqdm import tqdm
 
-import xarray as xr
+import pandas as pd
 
-from .path import datadir
-
-
-def ensure_valid_date(dt: datetime.date):
-    """Make sure the date entered is valid"""
-    sdate = datetime.datetime(2000, 1, 1, 0)  # TODO: is this really the first day?
-    if dt < sdate:
-        dt_str = dt.strftime("%Y%m%d-%H%M%S")
-        raise ValueError(f"Data is not available for {dt_str}")
+from .const import MISSING_SNAPSHOTS
+from .namingconventions import *
 
 
-def get_varname(dt: datetime.date):
+class BoundingBox:
+    def __init__(
+        self,
+        lonmin: float = 230,
+        lonmax: float = 300,
+        latmin: float = 20,
+        latmax: float = 55,
+    ) -> None:
+        """
+        Bounding box for the data to retain.
+        The valid boundaries are lon in [230, 300] and lat in [20, 55]
+        """
+
+        self.latmin = latmin
+        self.latmax = latmax
+        self.lonmin = lonmin
+        self.lonmax = lonmax
+
+        self.assert_valid_longitudes()
+        self.assert_valid_latitudes()
+
+    def assert_valid_longitudes(self) -> None:
+        """Make sure the longitudes are valid"""
+        assert (
+            self.lonmin < self.lonmax
+        ), "min longitude must be less than max longitude"
+        assert self.lonmin >= 230, "min longitude must be at least 230"
+        assert self.lonmax <= 300, "max longitude must be no greater than 300"
+
+    def assert_valid_latitudes(self) -> None:
+        """Make sure the latitudes are valid"""
+        assert self.latmin < self.latmax, "min latitude must be less than max latitude"
+        assert self.latmin >= 20, "min latitude must be at least 20"
+        assert self.latmax <= 55, "max latitude must be at least 55"
+
+
+def assert_valid_datetime(dt: datetime) -> None:
     """
-    Get the variable name for a particular date-time snapshot
-
-    Refer to email from Jian Zhang, July 7 2022
+    Do any needed checks on the data
     """
-    ensure_valid_date(dt)
-    cutoff = datetime.date(2020, 10, 1)  # TODO: update, this isn't exact yet
-    if dt > cutoff:
-        var = "MultiSensor_QPE_01H_Pass2"
-    else:
-        var = "GaugeCorr_QPE_01H"
-
-    return var
-
-
-def gz_fname(dt: datetime.date, local=False):
-    """
-    Get the filename of the `.grib2.gz` file.
-    If `local=True` then returns the full local path.
-    """
-    varname = get_varname(dt)
     dt_str = dt.strftime("%Y%m%d-%H%M%S")
-    fname = f"{varname}_00.00_{dt_str}.grib2.gz" # TODO: make sure this is the right format
-    if local:
-        fname = datadir(fname)
-    return fname
+    assert dt >= GAUGECORR_BEGINTIME, f"Data is not available for {dt_str}"
+    assert dt.minute == 0
+    assert dt.second == 0
+    assert dt.microsecond == 0
 
 
-def grib2_fname(dt: datetime.date):
-    """
-    Get the local .grib2 filename for a given date time
-    """
-    return gz_fname(dt).replace(".grib2.gz", ".grib2")
+class TimeRange:
+    """Shallow rapper for pandas.date_range with some checks"""
 
+    def __init__(self, stime: datetime, etime: datetime) -> None:
 
-def get_url(dt: datetime.date):
-    """
-    Get the URl of the file for a particular date-time snapshot
-    """
-    date_str = dt.strftime("%Y/%m/%d")
-    fname = gz_fname(dt)
-    return (
-        f"https://mtarchive.geol.iastate.edu/"
-        f"{date_str}/mrms/ncep/MultiSensor_QPE_01H_Pass2/"
-        f"{fname}"
-    )
+        assert_valid_datetime(stime)
+        assert_valid_datetime(etime)
+        self.stime = stime
+        self.etime = etime
+        self.dts = pd.date_range(self.stime, self.etime, freq="H")
+
+    def printbounds(self) -> str:
+        fmt = "%Y-%m-%d %H:%M:%S"
+        return self.stime.strftime(fmt) + " to " + self.etime.strftime(fmt)

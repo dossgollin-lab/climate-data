@@ -4,46 +4,48 @@ This is a **work in progress**!
 Use this software **with caution**!
 If you find it helpful please consider using the `Issues` tab to identify problems or suggest improvements.
 
-This program will create a database of NEXRAD radar precipitation data in formats that are easy to use for analysis, specifically Netcdf4 files that play nicely with the [Pangeo](https://pangeo.io/) ecosystem and can be stored on a local hard drive.
-Specifically, we use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
+The NOAA NEXRAD radar precipitation data is very useful for many hydrological applications, but it's stored in a confusing structure on a server hosted by Iowa State.
+The individual files are stored as `.grib2` files, which has the advantage of keeping their size small but the disadvantage of being hard to use with the `dask`/`xarray` parallel processing pipeline.
 
-Conceptually, the steps of our analysis are:
+This program creates a database of NEXRAD radar precipitation data in formats that are easy to use for analysis, specifically Netcdf4 files that play nicely with the [Pangeo](https://pangeo.io/) ecosystem and can be stored on a local hard drive.
 
-1. Download the raw data. The raw data is stored in compressed format on Iowa State's servers, with one `.grib2` file corresponding to one time step ("snapshot", i.e. one hour). Once the data is downloaded, it is decompressed it is stored in `./data/grib2/`. This data format is relatively compressed, so each file is of order 500kB.
-1. Use `xarray` to read in each `.grib2` file and save a spatial subset of it (set the boundaries in `config.yml`) as a netcdf4 file. Although these files are less compressed, they are much faster to read in. This step is rather slow because it takes a while (~10 seconds per snapshot) for `xarray` to parse the `.grib2` files correctly.
-1. Use `xarray`'s `open_mfdataset`, which leverages the power of `dask` for lazy loading, to read in all the data from netcdf4 files, subset, and extract the spatial/temporal boundaries of interest. See `demo.ipynb` for a simple demo
-
-The main tool used to accomplish this is [Snakemake](snakemake.readthedocs.io/), which is a reproducible workflow management system that is deeply integrated with Python.
-
-## Installation
-
-Installation assumes that you are using Anaconda.
-It should in principle be possible to use other Python package managers, but we haven't tried.
-The following instructions actually use `mamba`, which is a slightly faster and fancier version of `conda`; you can replace `mamba` with `conda` if you prefer.
-
-In your terminal:
+## To run (quick version)
 
 ```shell
-mamba env create --file environment.yml # can use conda instead of mamba
-conda activate nexrad # activate environment
-pip install -e . # install local package
+snakemake  --use-conda --cores SOME_NUMBER
 ```
 
-## To run
+where `SOME_NUMBER` is the number of cores you want to use.
+See [Snakemake docs](https://snakemake.readthedocs.io/) for additional arguments you can pass.
 
-Once you have installed,
+## To run (long version)
+
+For a bit more information
+
+### About: data variables
+
+We use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
+See [docs](./doc/) for more information.
+
+The basic steps of the analysis are
+
+1. Download the `.grib2.gz` file from the Iowa State repository
+1. Unzip the file from `.grib2.gz` to `.grib2`
+1. Use the `cdo` tool to convert from `.grib2` to NetCDF 4 (`.nc`)
+1. Leverage the `open_mfdataset` functionality in `xarray` to handle datasets spread across many files
+
+### Installation
+
+You will need Anaconda python installed.
+Then
 
 ```shell
-conda activate nexrad # make sure it's activated
-snakemake --cores <n_cores>
+conda env create --file environment.yml # creates the environment
+conda activate nexrad # activates the environment
 ```
 
-where `<n_cores>` is the number of cores you want to use.
-1 is a safe default if you don't want to multithread, but it this will take a while -- reading in each `.grib2` file takes on the order of 10 seconds, and there is a file for each hour.
+All other required dependencies are described using Snakemake and custom anaconda environments (see [Snakemake docs](https://snakemake.readthedocs.io/)).
 
-If you want to change the spatial domain retained as a `.nc` file, edit `config.yml`.
-If you want to change the time domain, edit the `Snakefile`.
+### About: storage requirements
 
-## Why is this useful?
-
-Take a look at `example_usecase.ipynb` to see how this data can be used
+One snapshot takes up approximately 3MB; one month requires about 2.55GB.
