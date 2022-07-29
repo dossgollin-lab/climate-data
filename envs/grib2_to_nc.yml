@@ -1,0 +1,4 @@
+channels:
+  - conda-forge
+dependencies:
+  - cdo>=2.0 # climate data tools

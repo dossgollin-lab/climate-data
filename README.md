@@ -9,23 +9,23 @@ The individual files are stored as `.grib2` files, which has the advantage of ke
 
 This program creates a database of NEXRAD radar precipitation data in formats that are easy to use for analysis, specifically Netcdf4 files that play nicely with the [Pangeo](https://pangeo.io/) ecosystem and can be stored on a local hard drive.
 
-## Data variables
+## To run (quick version)
+
+```shell
+snakemake  --use-conda --cores SOME_NUMBER
+```
+
+where `SOME_NUMBER` is the number of cores you want to use.
+See [Snakemake docs](https://snakemake.readthedocs.io/) for additional arguments you can pass.
+
+## To run (long version)
+
+For a bit more information
+
+### About: data variables
 
 We use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
 See [docs](./doc/) for more information.
-
-## Pre-Requisites
-
-You will need the following:
-
-1. Anaconda Python
-1. The `curl` utility (you probably have it!)
-1. The [CDO Tool](https://code.mpimet.mpg.de/projects/cdo/wiki#Installation-and-Supported-Platforms) which is available on nearly all platforms
-
-## Approach
-
-1. We use [Snakemake](https://snakemake.readthedocs.io/) to develop a reproducible data organization structure
-1. We use the custom package defined in `codebase/` to handle some of the annoying variable naming conventions
 
 The basic steps of the analysis are
 
@@ -33,3 +33,19 @@ The basic steps of the analysis are
 1. Unzip the file from `.grib2.gz` to `.grib2`
 1. Use the `cdo` tool to convert from `.grib2` to NetCDF 4 (`.nc`)
 1. Leverage the `open_mfdataset` functionality in `xarray` to handle datasets spread across many files
+
+### Installation
+
+You will need Anaconda python installed.
+Then
+
+```shell
+conda env create --file environment.yml # creates the environment
+conda activate nexrad # activates the environment
+```
+
+All other required dependencies are described using Snakemake and custom anaconda environments (see [Snakemake docs](https://snakemake.readthedocs.io/)).
+
+### About: storage requirements
+
+One snapshot takes up approximately 3MB; one month requires about 2.55GB.

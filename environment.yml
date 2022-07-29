@@ -6,9 +6,7 @@ channels:
 dependencies:
   - python=3.8 # Python version 3.6
   - black # clean code and make it pretty
-  - bottleneck # C-optimized array functions for NumPy
   - cartopy # mapping
-  - cfgrib # to read in grib files
   - dask # Parallel processing library
   - matplotlib # mapping
   - mypy # type checking
@@ -16,5 +14,7 @@ dependencies:
   - numpy # N-d array and numerics
   - pandas # Labeled array library
   - pylint # catch errors before you make them
+  - snakemake
+  - snakefmt
   - tqdm # Nice progressbar for longer computations
   - xarray # N-d labeled array library

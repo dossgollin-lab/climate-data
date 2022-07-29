@@ -18,6 +18,8 @@ def main():
         .sortby("time")
         .rename({"param9.6.209": "prcp_rate"})["prcp_rate"]
     )
+
+    # print the dataset
     print(ds)
 
 
