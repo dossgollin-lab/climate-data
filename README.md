@@ -49,3 +49,21 @@ All other required dependencies are described using Snakemake and custom anacond
 ### About: storage requirements
 
 One snapshot takes up approximately 3MB; one month requires about 2.55GB.
+
+## Demo
+
+If you run
+
+```shell
+snakemake  --use-conda --cores 1
+```
+
+Then you will download data for August 2017 to your drive.
+You will need 2.55GB of storage.
+You will also  produce the following plot:
+
+![Demo plot](./plots/demo_plot.png)
+
+which plots observed rainfall over the United States during Hurricane Harvey.
+Unsurprisingly, SE Texas has the highest rainfall values.
+If you can reproduce this plot, you can likely run the full analysis without problem.

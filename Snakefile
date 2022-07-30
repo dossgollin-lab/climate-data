@@ -32,9 +32,17 @@ netcdf_files = [
 # default rule
 rule default:
     input:
-        netcdf_files,
-    script:
-        "scripts/demo.py"
+        "plots/demo_plot.png",
+
+
+rule demo_plot:
+    input:
+        files=netcdf_files,
+        script="scripts/demo_plot.py",
+    output:
+        "plots/demo_plot.png",
+    shell:
+        "python {input.script} --path data/external/ --outfile {output}"
 
 
 ################################################################################
