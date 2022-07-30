@@ -8,6 +8,17 @@ import os
 from codebase import BoundingBox, TimeRange
 from codebase.namingconventions import get_nc_fname, fname2url
 
+# change this variable to save to another location!
+DIRNAME = os.path.abspath(os.curdir)
+
+# variables
+EXTERNAL = os.path.join(DIRNAME, "data", "external")
+LOGS = os.path.join(DIRNAME, "logs")
+SCRIPTS = os.path.join(DIRNAME, "logs")
+PLOTS = os.path.join(DIRNAME, "plots")
+ENVS = os.path.join(DIRNAME, "envs")
+
+
 # Define the bounding box of the analysis
 bbox = BoundingBox(
     lonmin=260,
@@ -25,24 +36,24 @@ trange = TimeRange(stime=datetime(2017, 8, 1, 0), etime=datetime(2017, 8, 31, 23
 
 # get netcdf files for each snapshot
 netcdf_files = [
-    get_nc_fname(dt=dti, dirname="data/external") for dti in trange.dts
+    get_nc_fname(dt=dti, dirname=EXTERNAL) for dti in trange.dts
 ]  # we want to get all of the netcdf files
 
 
 # default rule
 rule default:
     input:
-        "plots/demo_plot.png",
+        os.path.join(PLOTS, "demo_plot.png"),
 
 
 rule demo_plot:
     input:
         files=netcdf_files,
-        script="scripts/demo_plot.py",
+        script=os.path.join(SCRIPTS, "demo_plot.py"),
     output:
-        "plots/demo_plot.png",
+        os.path.join(PLOTS, "demo_plot.png"),
     shell:
-        "python {input.script} --path data/external/ --outfile {output}"
+        "python {input.script} --path {DIRNAME} --outfile {output}"
 
 
 ################################################################################
@@ -60,10 +71,8 @@ rule grib2_to_nc:
         "{fname}.grib2",  # any grib2 file in
     output:
         "{fname}.nc",  # creates a netcdf file
-    log:
-        "logs/grib2_to_nc/{fname}.log",
     conda:
-        "envs/grib2_to_nc.yml"  # use a specific environment
+        os.path.join(ENVS, "grib2_to_nc.yml")
     shell:
         "cdo -r -f nc4 -z zip_1 setctomiss,-3 -copy {input} {output}"
 
@@ -75,9 +84,7 @@ rule download_unzip:
     output:
         temp("{fname}.grib2"),
     conda:
-        "envs/download_unzip.yml"  # use a specific environment
-    log:
-        "logs/download_unzip/{fname}.log",
+        os.path.join(ENVS, "download_unzip.yml")
     params:
         url=lambda wildcards: fname2url(wildcards.fname),
     shell:
