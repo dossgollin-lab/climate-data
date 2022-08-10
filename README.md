@@ -70,8 +70,10 @@ If you can reproduce this plot, you can likely run the full analysis without pro
 
 ### Prototyping
 
-It takes Snakemake a long time to build the DAG, so it may be helpful to
+It takes Snakemake a long time to build the DAG, so for rapid prototyping it may be helpful to run the following:
 
 ```shell
 snakemake netcdf_files --use-conda --cores 1 --batch netcdf_files=1/100
 ```
+
+See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stable/executing/cli.html#dealing-with-very-large-workflows) for more details.

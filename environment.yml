@@ -4,11 +4,11 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python=3.8 # Python version 3.6
+  - python=3.7 # specify python version
   - black # clean code and make it pretty
   - cartopy # mapping
   - dask # Parallel processing library
-  - mamba # better solver
+  - mamba>=0.22.1 # better solver
   - matplotlib # mapping
   - mypy # type checking
   - netcdf4 # Wrapper for netcdf4
@@ -17,5 +17,4 @@ dependencies:
   - pylint # catch errors before you make them
   - snakemake
   - snakefmt
-  - tqdm # Nice progressbar for longer computations
   - xarray # N-d labeled array library
