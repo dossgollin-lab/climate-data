@@ -7,6 +7,7 @@ import platform
 import os
 
 from codebase import BoundingBox, TimeRange
+from codebase.const import GAUGECORR_BEGINTIME
 from codebase.namingconventions import get_nc_fname, fname2url
 
 ################################################################################
@@ -14,7 +15,7 @@ from codebase.namingconventions import get_nc_fname, fname2url
 ################################################################################
 
 # Define the time range of the analysis
-trange = TimeRange(codebase.const.GAUGECORR_BEGINTIME, datetime(2022, 7, 31, 23))
+trange = TimeRange(GAUGECORR_BEGINTIME, datetime(2022, 7, 31, 23))
 
 ################################################################################
 # CONFIGURE DATA / FILE STORAGE LOCATIONS
