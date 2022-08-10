@@ -67,3 +67,11 @@ You will also  produce the following plot:
 which plots observed rainfall over the United States during Hurricane Harvey.
 Unsurprisingly, SE Texas has the highest rainfall values.
 If you can reproduce this plot, you can likely run the full analysis without problem.
+
+### Prototyping
+
+It takes Snakemake a long time to build the DAG, so it may be helpful to
+
+```shell
+snakemake netcdf_files --use-conda --cores 1 --batch netcdf_files=1/100
+```

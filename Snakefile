@@ -44,26 +44,29 @@ ENVS = os.path.join(HOMEDIR, "envs")
 # SNAKEMAKE SETUP
 ################################################################################
 
-# get netcdf files for each snapshot
-netcdf_files = [
-    get_nc_fname(dt=dti, dirname=EXTERNAL) for dti in trange.dts
-]  # we want to get all of the netcdf files
-
-
 # default rule
 rule default:
     input:
         os.path.join(PLOTS, "demo_plot.png"),
 
 
+# get netcdf files for each snapshot
+all_netcdf_files = [
+    get_nc_fname(dt=dti, dirname=EXTERNAL) for dti in trange.dts
+]  # we want to get all of the netcdf files
+
 rule demo_plot:
     input:
-        files=netcdf_files,
+        files=all_netcdf_files,
         script=os.path.join(SCRIPTS, "demo_plot.py"),
     output:
         os.path.join(PLOTS, "demo_plot.png"),
     shell:
         "python {input.script} --path {HOMEDIR} --outfile {output}"
+
+
+rule netcdf_files:
+    input: all_netcdf_files
 
 
 ################################################################################
