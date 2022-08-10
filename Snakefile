@@ -9,26 +9,19 @@ from codebase import BoundingBox, TimeRange
 from codebase.namingconventions import get_nc_fname, fname2url
 
 # change this variable to save to another location!
-DIRNAME = os.path.abspath(os.curdir)
+# at present I am saving to Rice RDF -- see https://kb.rice.edu/page.php?id=108256#MacOS to access
+HOMEDIR = os.path.abspath(".")
+DATADIR = os.path.abspath("/Volumes/research/jd82/nexrad-xarray") 
 
 # variables
-EXTERNAL = os.path.join(DIRNAME, "data", "external")
-LOGS = os.path.join(DIRNAME, "logs")
-SCRIPTS = os.path.join(DIRNAME, "logs")
-PLOTS = os.path.join(DIRNAME, "plots")
-ENVS = os.path.join(DIRNAME, "envs")
-
-
-# Define the bounding box of the analysis
-bbox = BoundingBox(
-    lonmin=260,
-    lonmax=290,
-    latmin=25,
-    latmax=40,
-)
+EXTERNAL = os.path.join(DATADIR, "data", "external")
+LOGS = os.path.join(HOMEDIR, "logs")
+SCRIPTS = os.path.join(HOMEDIR, "scripts")
+PLOTS = os.path.join(HOMEDIR, "plots")
+ENVS = os.path.join(HOMEDIR, "envs")
 
 # Define the time range of the analysis
-trange = TimeRange(stime=datetime(2017, 8, 1, 0), etime=datetime(2017, 8, 31, 23))
+trange = TimeRange(codebase.const.GAUGECORR_BEGINTIME, datetime(2022, 7, 31, 23))
 
 ################################################################################
 # SNAKEMAKE SETUP
@@ -53,7 +46,7 @@ rule demo_plot:
     output:
         os.path.join(PLOTS, "demo_plot.png"),
     shell:
-        "python {input.script} --path {DIRNAME} --outfile {output}"
+        "python {input.script} --path {HOMEDIR} --outfile {output}"
 
 
 ################################################################################
