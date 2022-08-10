@@ -3,25 +3,41 @@ Snakefile: see snakemake.readthedocs.io/
 """
 
 from datetime import datetime
+import platform
 import os
 
 from codebase import BoundingBox, TimeRange
 from codebase.namingconventions import get_nc_fname, fname2url
 
-# change this variable to save to another location!
-# at present I am saving to Rice RDF -- see https://kb.rice.edu/page.php?id=108256#MacOS to access
-HOMEDIR = os.path.abspath(".")
-DATADIR = os.path.abspath("/Volumes/research/jd82/nexrad-xarray") 
+################################################################################
+# CONSTANTS AND CONFIGURABLE OPTIONS
+################################################################################
 
-# variables
+# Define the time range of the analysis
+trange = TimeRange(codebase.const.GAUGECORR_BEGINTIME, datetime(2022, 7, 31, 23))
+
+################################################################################
+# CONFIGURE DATA / FILE STORAGE LOCATIONS
+################################################################################
+
+HOMEDIR = os.path.abspath(".") # most stuff should be stored locally
+
+# store the data on a remote location
+# at present I am saving to Rice RDF -- see https://kb.rice.edu/page.php?id=108256
+system = platform.system()
+if system == "Darwin":
+    DATADIR = os.path.abspath("/Volumes/research/jd82/nexrad-xarray")
+elif system == "Linux":
+    DATADIR = os.path.abspath("/home/jd82/RDF/jd82/nexrad-xarray")
+else:
+    raise ValueError("Unsupported platform")
+
+# we can use these paths as variables below
 EXTERNAL = os.path.join(DATADIR, "data", "external")
 LOGS = os.path.join(HOMEDIR, "logs")
 SCRIPTS = os.path.join(HOMEDIR, "scripts")
 PLOTS = os.path.join(HOMEDIR, "plots")
 ENVS = os.path.join(HOMEDIR, "envs")
-
-# Define the time range of the analysis
-trange = TimeRange(codebase.const.GAUGECORR_BEGINTIME, datetime(2022, 7, 31, 23))
 
 ################################################################################
 # SNAKEMAKE SETUP
