@@ -2,7 +2,10 @@ from datetime import datetime
 from typing import List
 
 # there are some snapshots that are known to be missing data
-MISSING_SNAPSHOTS: List[datetime] = []  # TODO: all the missing data goes here
+MISSING_SNAPSHOTS = [
+    datetime(2015, 5, 18, 22),
+    datetime(2015, 5, 18, 23),
+]  # TODO: all the missing data goes here
 
 # when does the GaugeCorr_QPE_01H data start
 GAUGECORR_BEGINTIME = datetime(2015, 5, 6, 20)

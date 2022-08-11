@@ -7,7 +7,7 @@ import platform
 import os
 
 from codebase import BoundingBox, TimeRange
-from codebase.const import GAUGECORR_BEGINTIME
+from codebase.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
 from codebase.namingconventions import get_nc_fname, fname2url
 
 ################################################################################
@@ -50,10 +50,11 @@ rule default:
         os.path.join(PLOTS, "demo_plot.png"),
 
 
-# get netcdf files for each snapshot
+# a list of all the filenames for which there is data
 all_netcdf_files = [
     get_nc_fname(dt=dti, dirname=EXTERNAL) for dti in trange.dts
-]  # we want to get all of the netcdf files
+    if dti not in MISSING_SNAPSHOTS
+]
 
 rule demo_plot:
     input:
