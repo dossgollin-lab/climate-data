@@ -30,6 +30,8 @@ if system == "Darwin":
     DATADIR = os.path.abspath("/Volumes/research/jd82/nexrad-xarray")
 elif system == "Linux":
     DATADIR = os.path.abspath("/home/jd82/RDF/jd82/nexrad-xarray")
+elif system == 'Windows':  # assuming that the network drive as mounted as Z, by default
+    DATADIR = os.path.abspath("Z:/jd82/nexrad-xarray")
 else:
     raise ValueError("Unsupported platform")
 
