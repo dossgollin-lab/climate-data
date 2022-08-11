@@ -114,3 +114,7 @@ Note:
 - `--keep-going`: if a file causes an error, don't give up
 
 If you are on a different machine you can learn about how many cores are available with the `lscpu` command.
+
+### Linters
+
+Linters should run automatically
