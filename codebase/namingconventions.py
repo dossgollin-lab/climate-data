@@ -69,7 +69,7 @@ def fname2dt(fname: str) -> datetime:
     """
     Parse a filename to get the corresponding datetime
     """
-    dt_str = fname.split("/")[-1].split("_")[4]
+    dt_str = fname.split("_00.00_")[1].split(".")[0]
     return datetime.strptime(dt_str, DT_FORMAT)
 
 
