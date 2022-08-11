@@ -21,7 +21,7 @@ trange = TimeRange(GAUGECORR_BEGINTIME, datetime(2022, 7, 31, 23))
 # CONFIGURE DATA / FILE STORAGE LOCATIONS
 ################################################################################
 
-HOMEDIR = os.path.abspath(".") # most stuff should be stored locally
+HOMEDIR = os.path.abspath(".")  # most stuff should be stored locally
 
 # store the data on a remote location
 # at present I am saving to Rice RDF -- see https://kb.rice.edu/page.php?id=108256
@@ -30,7 +30,7 @@ if system == "Darwin":
     DATADIR = os.path.abspath("/Volumes/research/jd82/nexrad-xarray")
 elif system == "Linux":
     DATADIR = os.path.abspath("/home/jd82/RDF/jd82/nexrad-xarray")
-elif system == 'Windows':  # assuming that the network drive as mounted as Z, by default
+elif system == "Windows":  # assuming that the network drive as mounted as Z, by default
     DATADIR = os.path.abspath("Z:/jd82/nexrad-xarray")
 else:
     raise ValueError("Unsupported platform")
@@ -46,6 +46,7 @@ ENVS = os.path.join(HOMEDIR, "envs")
 # SNAKEMAKE SETUP
 ################################################################################
 
+
 # default rule
 rule default:
     input:
@@ -54,9 +55,11 @@ rule default:
 
 # a list of all the filenames for which there is data
 all_netcdf_files = [
-    get_nc_fname(dt=dti, dirname=EXTERNAL) for dti in trange.dts
+    get_nc_fname(dt=dti, dirname=EXTERNAL)
+    for dti in trange.dts
     if dti not in MISSING_SNAPSHOTS
 ]
+
 
 rule demo_plot:
     input:
@@ -69,7 +72,8 @@ rule demo_plot:
 
 
 rule netcdf_files:
-    input: all_netcdf_files
+    input:
+        all_netcdf_files,
 
 
 ################################################################################
