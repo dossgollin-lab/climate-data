@@ -115,6 +115,9 @@ Note:
 
 If you are on a different machine you can learn about how many cores are available with the `lscpu` command.
 
+If you are running on a remote machine via `ssh`, then prepending the command above with [`nohup`](https://www.computerhope.com/unix/unohup.htm) may be a good idea.
+In a nutshell, this will keep the process running even after you close your `ssh` session.
+
 ### Linters
 
 Linters should run automatically
