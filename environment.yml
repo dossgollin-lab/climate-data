@@ -8,6 +8,8 @@ dependencies:
   - black # clean code and make it pretty
   - cartopy # mapping
   - dask # Parallel processing library
+  - ipykernel # to run locally
+  - jupyter # to run notebooks
   - mamba>=0.22.1 # better solver
   - matplotlib # mapping
   - mypy # type checking

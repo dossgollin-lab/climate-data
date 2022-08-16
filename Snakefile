@@ -50,7 +50,7 @@ ENVS = os.path.join(HOMEDIR, "envs")
 # default rule
 rule default:
     input:
-        os.path.join(PLOTS, "demo_plot.png"),
+        all_netcdf_files,
 
 
 # a list of all the filenames for which there is data
@@ -59,16 +59,6 @@ all_netcdf_files = [
     for dti in trange.dts
     if dti not in MISSING_SNAPSHOTS
 ]
-
-
-rule demo_plot:
-    input:
-        files=all_netcdf_files,
-        script=os.path.join(SCRIPTS, "demo_plot.py"),
-    output:
-        os.path.join(PLOTS, "demo_plot.png"),
-    shell:
-        "python {input.script} --path {HOMEDIR} --outfile {output}"
 
 
 rule netcdf_files:
