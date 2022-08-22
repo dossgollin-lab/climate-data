@@ -6,7 +6,7 @@ from datetime import datetime
 import platform
 import os
 
-from codebase import BoundingBox, TimeRange
+from codebase import TimeRange
 from codebase.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
 from codebase.namingconventions import get_nc_fname, fname2url
 
