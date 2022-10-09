@@ -11,12 +11,14 @@ dependencies:
   - dask # Parallel processing library
   - ipykernel # to run locally
   - jupyter # to run notebooks
+  - jupyter-black # black formatting for notebooks
   - mamba>=0.22.1 # better solver
   - matplotlib # mapping
   - mypy # type checking
   - netcdf4 # Wrapper for netcdf4
   - numpy # N-d array and numerics
   - pandas # Labeled array library
+  - pip
   - pylint # catch errors before you make them
   - snakemake
   - snakefmt

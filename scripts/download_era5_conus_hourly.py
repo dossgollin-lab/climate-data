@@ -42,9 +42,9 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.year >= 1979:
-        dataname = "reanalysis-era5-single-levels" # TODO: add other data types
+        dataname = "reanalysis-era5-single-levels"  # TODO: add other data types
     else:
-        dataname = "reanalysis-era5-single-levels-preliminary-back-extension" # TODO: this has been updated
+        dataname = "reanalysis-era5-single-levels-preliminary-back-extension"  # TODO: this has been updated
 
     ecmwf_client = cdsapi.Client()
     ecmwf_client.retrieve(
@@ -59,7 +59,9 @@ def main() -> None:
                 "12",
             ],
             "day": [f"{day}" for day in np.arange(1, 31 + 1)],
-            "time": [f"{number:02d}:00" for number in range(24)], # 00:00, 01:00, ... 23:00
+            "time": [
+                f"{number:02d}:00" for number in range(24)
+            ],  # 00:00, 01:00, ... 23:00
             "area": [args.latmax, args.lonmin, args.latmin, args.lonmax],
             "format": "netcdf",
             "grid": [1, 1],
