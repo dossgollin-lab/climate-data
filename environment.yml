@@ -4,9 +4,10 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python=3.7 # specify python version
+  - python=3.10 # specify python version
   - black # clean code and make it pretty
   - cartopy # mapping
+  - cdsapi # ECMWF interface
   - dask # Parallel processing library
   - ipykernel # to run locally
   - jupyter # to run notebooks

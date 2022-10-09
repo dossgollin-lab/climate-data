@@ -79,7 +79,7 @@ When you're just rapidly prototyping things, this lag time is annoying.
 To speed up, you can batch files like this:
 
 ```shell
-snakemake netcdf_files --use-conda --cores 1 --batch netcdf_files=1/1000
+snakemake nexrad_nc_files --use-conda --cores 1 --batch nexrad_nc_files=1/1000
 ```
 
 See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stable/executing/cli.html#dealing-with-very-large-workflows) for more details.
@@ -103,7 +103,7 @@ If you copy and paste, be aware that this documentation doesn't make very clear 
 If you just want to build the dataset, a good default command to use is
 
 ```shell
-snakemake --use-conda --cores all  --rerun-incomplete --keep-going netcdf_files
+snakemake --use-conda --cores all  --rerun-incomplete --keep-going nexrad_nc_files
 ```
 
 Note:

@@ -43,32 +43,21 @@ PLOTS = os.path.join(HOMEDIR, "plots")
 ENVS = os.path.join(HOMEDIR, "envs")
 
 ################################################################################
-# SNAKEMAKE SETUP
+# NEXRAD DATA
 ################################################################################
 
-
-# default rule
-rule default:
-    input:
-        all_netcdf_files,
-
-
 # a list of all the filenames for which there is data
-all_netcdf_files = [
+all_nexrad_nc_files = [
     get_nc_fname(dt=dti, dirname=EXTERNAL)
     for dti in trange.dts
     if dti not in MISSING_SNAPSHOTS
 ]
 
 
-rule netcdf_files:
+# create a rule to get all the nexrad netcdf files
+rule nexrad_nc_files:
     input:
-        all_netcdf_files,
-
-
-################################################################################
-# RAW DATA
-################################################################################
+        all_nexrad_nc_files,
 
 
 # this rule convert grib to netcdf
@@ -99,3 +88,14 @@ rule download_unzip:
         url=lambda wildcards: fname2url(wildcards.fname),
     shell:
         "curl -L {params.url} | gunzip > {output}"
+
+
+################################################################################
+# DEFAULT RULE
+################################################################################
+
+
+# default rule
+rule default:
+    input:
+        all_nexrad_nc_files,
