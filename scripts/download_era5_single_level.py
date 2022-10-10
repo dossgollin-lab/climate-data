@@ -8,6 +8,7 @@ the domain. The default domain is CONUS.
 
 The variable should follow the ERA5 documentation. Some common ones: 
 - 2m_temperature
+- u_component_of_wind
 
 To access the data you will need a password saved in a local file. See CDASAPI
 documentation for details!
@@ -41,14 +42,14 @@ def main() -> None:
     parser.add_argument("--latmax", type=float, default=CONUS[1][1])
     args = parser.parse_args()
 
-    if args.year >= 1979:
-        dataname = "reanalysis-era5-single-levels"  # TODO: add other data types
+    if args.year >= 1959:
+        dataset = "reanalysis-era5-single-levels"
     else:
-        dataname = "reanalysis-era5-single-levels-preliminary-back-extension"  # TODO: this has been updated
+        dataset = "reanalysis-era5-single-levels-preliminary-back-extension"
 
     ecmwf_client = cdsapi.Client()
     ecmwf_client.retrieve(
-        dataname,
+        dataset,
         {
             "product_type": "reanalysis",
             "variable": args.variable,
