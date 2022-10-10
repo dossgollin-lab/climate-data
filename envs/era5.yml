@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - cdsapi # ECMWF interface
+  - netcdf4 # Wrapper for netcdf4

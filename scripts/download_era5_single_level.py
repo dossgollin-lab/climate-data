@@ -36,6 +36,7 @@ def main() -> None:
     parser.add_argument("--year", type=int)
     parser.add_argument("-o", "--outfile", type=str)
     parser.add_argument("--variable", type=str)
+    parser.add_argument("--resolution", type=float)
     parser.add_argument("--lonmin", type=float, default=CONUS[0][0])
     parser.add_argument("--lonmax", type=float, default=CONUS[0][1])
     parser.add_argument("--latmin", type=float, default=CONUS[1][0])
@@ -54,18 +55,12 @@ def main() -> None:
             "product_type": "reanalysis",
             "variable": args.variable,
             "year": [args.year],
-            "month": [
-                "01",
-                "02",
-                "12",
-            ],
+            "month": [f"{month:02d}" for month in range(1, 13)],
             "day": [f"{day}" for day in np.arange(1, 31 + 1)],
-            "time": [
-                f"{number:02d}:00" for number in range(24)
-            ],  # 00:00, 01:00, ... 23:00
+            "time": [f"{hour:02d}:00" for hour in range(24)],  # 00:00, 01:00, ... 23:00
             "area": [args.latmax, args.lonmin, args.latmin, args.lonmax],
             "format": "netcdf",
-            "grid": [1, 1],
+            "grid": [args.resolution, args.resolution],
         },
         args.outfile,
     )

@@ -1,19 +1,31 @@
-# NEXRAD-xarray
+# Doss-Gollin Lab Climate Data Repository
 
 This is a **work in progress**!
 Use this software **with caution**!
-If you find it helpful please consider using the `Issues` tab to identify problems or suggest improvements (there are already several things there).
+If you find it helpful please consider using the `Issues` tab to identify problems or suggest improvements (there are already several things there)!
 
 ## Overview
 
-The NOAA NEXRAD radar precipitation data is very useful for many hydrological applications, but it's stored in a confusing structure on a server hosted by Iowa State.
+This repository contains code needed to access weather and climate data commonly re-used in the Doss-Gollin lab.
+None of the actual data is contained in this repository!
+Instead, it is downloaded from various external sources and then stored on the Rice Research Data Facility.
+Use of this facility is not free, so we should only store the datasets that we expect to use frequently.
+If you have questions, contact James.
+
+All data is stored as NetCDF4 files for easy use with the user-friendly, accessible, and standard [Pangeo](https://pangeo.io/) ecosystem.
+
+## Accessing the data
+
+You don't need to use the codes in this repository to access the data.
+The data is stored on James's RDF account.
+See the lab manual on Notion for details of accessing the data.
+
+### Datasets included
+
+**The NOAA NEXRAD radar precipitation data** is very useful for many hydrological applications, but it's stored in a confusing structure on a server hosted by Iowa State.
 This makes it hard to use with the user-friendly, accessible, and standard [Pangeo](https://pangeo.io/) ecosystem.
-
-### About: data variables
-
 We use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
 See [docs](./doc/) for more information.
-
 The basic steps of the analysis are
 
 1. Download the `.grib2.gz` file from the Iowa State repository
@@ -21,24 +33,32 @@ The basic steps of the analysis are
 1. Use the `cdo` tool to convert from `.grib2` to NetCDF 4 (`.nc`)
 1. Leverage the `open_mfdataset` functionality in `xarray` to handle datasets spread across many files
 
-### Approach
+**ERA5** is a commonly used reanalysis data product.
+At the moment this repository stores:
 
-We use three main tools.
+- meridional and zonal wind at 500 hPa
+- surface air temperature
+- elevation (time-invariant, called geopotential)
+- vertical integral of meridional and zonal water vapor flux
 
-1. [Snakemake](https://snakemake.readthedocs.io/) is a powerful tool for specifying dependencies and workflows.
-1. The [Climate Data Operators](https://code.mpimet.mpg.de/projects/cdo) program to convert from `.grib2` to NetCDF4 files quickly and efficiently.
-1. Anaconda (mainly python) to manage dependencies.
+from 2015-2022.
+Adding additional years would be straightforward; edit 
 
-Some familiarity with these tools will be helpful if you want to edit our codes, but you can run them with only a passing knowledge of the linux shell and the ability to make very basic changes to [Snakefile](./Snakefile) (which is essentially python).
+## Developing this dataset
 
-## To run our codes
+If you want to change the files we track or edit this repository, then this section is for you.
+This repository uses [Snakemake](https://snakemake.readthedocs.io/) to define and specify dependencies and workflows.
+If you've never used Snakemake before, you should read up on it.
 
-If you run into problems please use `Issues` tab on GitHub to bring them to our attention.
+We also use Anaconda to manage dependencies.
+This includes using Anaconda to specify the dependencies for each workflow rule, making the workflow more concise and reproducible.
+
+If you run into problems please use the `Issues` tab on GitHub to bring them to our attention.
 
 ### Installation
 
 You will need [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed.
-Then open a terminal and run the following lines\
+Then open a terminal and run the following lines
 
 ```shell
 conda env create --file environment.yml # creates the environment
@@ -48,47 +68,14 @@ pip install -e . # install the local package in codebase/
 
 All other required dependencies are described using Snakemake and anaconda environments (see [Snakemake docs](https://snakemake.readthedocs.io/)).
 
-### Change the path
+### Adjust the path
 
-Edit the **CONFIGURE DATA / FILE STORAGE LOCATIONS** section of [`Snakefile`](./Snakefile) and change the `DATADIR` to suit your needs.
-We have currently configured it to save the data to the Rice RDF mounted locally -- see To mount RDF on Linux, follow the directions [here](https://kb.rice.edu/page.php?id=108256).
-(Windows access is possible but not yet supported -- please open a PR!)
+The location where data will be stored is defined in `config.yaml` under the `datadir` argument.
+This should point to the location where the RDF is mounted.
+To mount the RDF locally, follow the directions [here](https://kb.rice.edu/page.php?id=108256).
+If you follow the default settings, you shouldn't need to adjust the path specified in `config.yaml`.
 
-### Quick version
-
-```shell
-snakemake  --use-conda --cores SOME_NUMBER
-```
-
-where `SOME_NUMBER` is the number of cores you want to use (e.g., `--cores 2`).
-There are many additional arguments you can pass -- see [Snakemake docs](https://snakemake.readthedocs.io/).
-
-## Technical details
-
-This is a bit of living documentation.
-For now it is badly organized :).
-
-### Approximate storage requirements
-
-One snapshot takes up approximately 3MB; one month requires about 2.55GB.
-
-### Prototyping
-
-It takes Snakemake a long time to build the DAG.
-When you're just rapidly prototyping things, this lag time is annoying.
-To speed up, you can batch files like this:
-
-```shell
-snakemake nexrad_nc_files --use-conda --cores 1 --batch nexrad_nc_files=1/1000
-```
-
-See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stable/executing/cli.html#dealing-with-very-large-workflows) for more details.
-
-### File system stuff
-
-To mount RDF on Linux, follow the directions [here](https://kb.rice.edu/page.php?id=108256#Linux).
-Be aware that you need to change the `uid` argument.
-
+If you are mounting on Linux, be aware that you need to change the `uid` argument.
 For example the command
 
 ```shell
@@ -98,12 +85,36 @@ sudo mount.cifs -o username=jd82,domain=ADRICE,mfsymlinks,rw,vers=3.0,sign,uid=j
 will mount the RDF to `$HOME/RDF` for user `jd82`.
 If you copy and paste, be aware that this documentation doesn't make very clear that you need to change the `uid`.
 
-### A good command on our group workstation
+### Running codes
+
+To update the entire dataset, run something like
+
+```shell
+snakemake  --use-conda --cores SOME_NUMBER
+```
+
+where `SOME_NUMBER` is the number of cores you want to use (e.g., `--cores all`).
+There are many additional arguments you can pass -- see [Snakemake docs](https://snakemake.readthedocs.io/).
+
+### Prototyping
+
+It takes Snakemake a long time to build the DAG.
+When you're just rapidly prototyping things, this lag time is annoying.
+To speed up, you can batch files like this:
+
+```shell
+snakemake nexrad --use-conda --cores 1 --batch nexrad=1/1000
+```
+
+See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stable/executing/cli.html#dealing-with-very-large-workflows) for more details.
+
+
+### Sensible default
 
 If you just want to build the dataset, a good default command to use is
 
 ```shell
-snakemake --use-conda --cores all  --rerun-incomplete --keep-going nexrad_nc_files
+snakemake --use-conda --cores all  --rerun-incomplete --keep-going
 ```
 
 Note:
@@ -120,4 +131,14 @@ In a nutshell, this will keep the process running even after you close your `ssh
 
 ### Linters
 
-Linters should run automatically
+Linters should run automatically if you are using VS Code with relevant extensions installed.
+Before submitting a pull request, please `activate nexrad` and then
+
+- `snakefmt .` to reformat the Snakefile
+- `black .` to reformat the code
+- `mypy . --ignore-missing-imports` to run type checks on the code. This is a good way to catch bugs.
+
+Additionally, if you're messing with `Snakefile` then `snakemake --lint` is a helpful resource with good suggestions.
+
+We are working to get these to run automatically using GitHub workflows.
+See [this issue](https://github.com/dossgollin-lab/nexrad-xarray/issues/5) and help out if you're goot at GitHub Actions.

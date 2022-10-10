@@ -1,4 +1,13 @@
 datadir:
-  osx: "/Volumes/research/jd82/nexrad-xarray"
-  linux: "/home/jd82/RDF/jd82/nexrad-xarray"
-  windows: "Z:/jd82/nexrad-xarray"
+  osx: "/Volumes/research/jd82/"
+  linux: "/home/jd82/RDF/jd82/"
+  windows: "Z:/jd82/"
+bounds:
+  lonmin: -125
+  lonmax: -65
+  latmin: 25
+  latmax: 50
+era5_resolution: 0.25
+era5_years:
+  first: 2015
+  last: 2021

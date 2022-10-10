@@ -15,7 +15,7 @@ from codebase.namingconventions import get_nc_fname, fname2url
 ################################################################################
 
 # Define the time range of the analysis
-trange = TimeRange(GAUGECORR_BEGINTIME, datetime(2022, 7, 31, 23))
+trange = TimeRange(GAUGECORR_BEGINTIME, datetime(2021, 12, 31, 23))
 
 ################################################################################
 # CONFIGURE DATA / FILE STORAGE LOCATIONS
@@ -40,14 +40,16 @@ else:
     raise ValueError("Unsupported platform")
 
 # we can use these paths as variables below
-EXTERNAL = os.path.join(DATADIR, "data", "external")
 SCRIPTS = os.path.join(HOMEDIR, "scripts")
 PLOTS = os.path.join(HOMEDIR, "plots")
 ENVS = os.path.join(HOMEDIR, "envs")
+LOGS = os.path.join(HOMEDIR, "logs")
 
 ################################################################################
 # NEXRAD DATA
 ################################################################################
+
+NEXRAD = os.path.join(DATADIR, "nexrad")
 
 
 # this rule convert grib to netcdf
@@ -57,11 +59,13 @@ ENVS = os.path.join(HOMEDIR, "envs")
 # setctomiss,-3 sets all values of -3 to missing
 rule grib2_to_nc:
     input:
-        "{fname}.grib2",  # any grib2 file in
+        os.path.join(NEXRAD, "{fname}.grib2"),  # any grib2 file in
     output:
-        "{fname}.nc",  # creates a netcdf file
+        os.path.join(NEXRAD, "{fname}.nc"),  # creates a netcdf file
     conda:
         os.path.join(ENVS, "grib2_to_nc.yml")
+    log:
+        os.path.join(LOGS, "grib2_to_nc", "{fname}.log"),
     shell:
         "cdo -r -f nc4 -z zip_1 setctomiss,-3 -copy {input} {output}"
 
@@ -76,13 +80,15 @@ rule download_unzip:
         os.path.join(ENVS, "download_unzip.yml")
     params:
         url=lambda wildcards: fname2url(wildcards.fname),
+    log:
+        os.path.join(LOGS, "download_unzip", "{fname}.log"),
     shell:
         "curl -L {params.url} | gunzip > {output}"
 
 
 # a list of all the filenames for which there is data
 all_nexrad_nc_files = [
-    get_nc_fname(dt=dti, dirname=EXTERNAL)
+    get_nc_fname(dt=dti, dirname=NEXRAD)
     for dti in trange.dts
     if dti not in MISSING_SNAPSHOTS
 ]
@@ -97,25 +103,108 @@ rule nexrad:
 # REANALYSIS
 ################################################################################
 
+REANALYSIS = os.path.join(DATADIR, "ERA5")
 
-# 0.1 degree elevation data
-# see https://confluence.ecmwf.int/display/CKB/ERA5-Land%3A+data+documentation#ERA5Land:datadocumentation-parameterlistingParameterlistings
-elevation_fname = os.path.join(EXTERNAL, "reanalysis", "elevation.nc")
-elevation_url = "https://confluence.ecmwf.int/download/attachments/140385202/geo_1279l4_0.1x0.1.grib2_v4_unpack.nc?version=1&modificationDate=1591979822003&api=v2"
+# some strings to reuse
+str_resolution = " --resolution {}".format(config["era5_resolution"])
+str_bounds = " --lonmin {} --lonmax {} --latmin {} --latmax {}".format(
+    config["bounds"]["lonmin"],
+    config["bounds"]["lonmax"],
+    config["bounds"]["latmin"],
+    config["bounds"]["latmax"],
+)
 
 
-rule download_elevation:
+elevation_fname = os.path.join(REANALYSIS, "single_level", "elevation.nc")
+
+
+rule era5_elevation:
+    input:
+        os.path.join(SCRIPTS, "download_era5_orography.py"),
     output:
         elevation_fname,
+    log:
+        os.path.join(LOGS, "era5_elevation.log"),
     conda:
-        os.path.join(ENVS, "download_unzip.yml")  # just needs curl
-    params:
-        url=elevation_url,
+        os.path.join(ENVS, "era5.yml")
     shell:
-        "curl -L {params.url}  > {output}"
+        "python {input} --outfile {output}" + str_resolution + str_bounds
 
 
-all_reanalysis_files = [elevation_fname]
+rule era5_pressure:
+    input:
+        os.path.join(SCRIPTS, "download_era5_pressure.py"),
+    output:
+        os.path.join(REANALYSIS, "pressure_level", "{variable}_{pressure}_{year}.nc"),
+    log:
+        os.path.join(LOGS, "era5_pressure", "{variable}_{pressure}_{year}.log"),
+    conda:
+        os.path.join(ENVS, "era5.yml")
+    shell:
+        (
+            "python {input} --outfile {output} --variable {wildcards.variable} --pressure {wildcards.pressure} --year {wildcards.year}"
+            + str_resolution
+            + str_bounds
+        )
+
+
+rule era5_single_level:
+    input:
+        os.path.join(SCRIPTS, "download_era5_single_level.py"),
+    output:
+        os.path.join(REANALYSIS, "single_level", "{variable}_{year}.nc"),
+    log:
+        os.path.join(LOGS, "era5_single_level", "{variable}_{year}.log"),
+    conda:
+        os.path.join(ENVS, "era5.yml")
+    shell:
+        (
+            "python {input} --outfile {output} --variable {wildcards.variable} --year {wildcards.year}"
+            + str_resolution
+            + str_bounds
+        )
+
+
+era5_years = range(config["era5_years"]["first"], config["era5_years"]["last"] + 1)
+
+# see https://confluence.ecmwf.int/display/CKB/ERA5%3A+data+documentation#ERA5:datadocumentation-Table1
+uwnd_files = [
+    os.path.join(REANALYSIS, "pressure_level", f"u_component_of_wind_500_{year}.nc")
+    for year in era5_years
+]
+vwnd_files = [
+    os.path.join(REANALYSIS, "pressure_level", f"v_component_of_wind_500_{year}.nc")
+    for year in era5_years
+]
+eastward_flux_files = [
+    os.path.join(
+        REANALYSIS,
+        "single_level",
+        f"vertical_integral_of_eastward_water_vapour_flux_{year}.nc",
+    )
+    for year in era5_years
+]
+northward_flux_files = [
+    os.path.join(
+        REANALYSIS,
+        "single_level",
+        f"vertical_integral_of_northward_water_vapour_flux_{year}.nc",
+    )
+    for year in era5_years
+]
+temp_files = [
+    os.path.join(REANALYSIS, "single_level", f"2m_temperature_{year}.nc")
+    for year in era5_years
+]
+
+all_reanalysis_files = (
+    [elevation_fname]
+    + uwnd_files
+    + vwnd_files
+    + temp_files
+    + eastward_flux_files
+    + northward_flux_files
+)
 
 
 rule reanalysis:
