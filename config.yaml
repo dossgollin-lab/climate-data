@@ -1,0 +1,4 @@
+datadir:
+  osx: "/Volumes/research/jd82/nexrad-xarray"
+  linux: "/home/jd82/RDF/jd82/nexrad-xarray"
+  windows: "Z:/jd82/nexrad-xarray"

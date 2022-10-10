@@ -21,23 +21,26 @@ trange = TimeRange(GAUGECORR_BEGINTIME, datetime(2022, 7, 31, 23))
 # CONFIGURE DATA / FILE STORAGE LOCATIONS
 ################################################################################
 
+
+configfile: "config.yaml"
+
+
 HOMEDIR = os.path.abspath(".")  # most stuff should be stored locally
 
 # store the data on a remote location
 # at present I am saving to Rice RDF -- see https://kb.rice.edu/page.php?id=108256
 system = platform.system()
 if system == "Darwin":
-    DATADIR = os.path.abspath("/Volumes/research/jd82/nexrad-xarray")
+    DATADIR = os.path.abspath(config["datadir"]["osx"])
 elif system == "Linux":
-    DATADIR = os.path.abspath("/home/jd82/RDF/jd82/nexrad-xarray")
-elif system == "Windows":  # assuming that the network drive as mounted as Z, by default
-    DATADIR = os.path.abspath("Z:/jd82/nexrad-xarray")
+    DATADIR = os.path.abspath(config["datadir"]["linux"])
+elif system == "Windows":
+    DATADIR = os.path.abspath(config["datadir"]["windows"])
 else:
     raise ValueError("Unsupported platform")
 
 # we can use these paths as variables below
 EXTERNAL = os.path.join(DATADIR, "data", "external")
-LOGS = os.path.join(HOMEDIR, "logs")
 SCRIPTS = os.path.join(HOMEDIR, "scripts")
 PLOTS = os.path.join(HOMEDIR, "plots")
 ENVS = os.path.join(HOMEDIR, "envs")
@@ -45,19 +48,6 @@ ENVS = os.path.join(HOMEDIR, "envs")
 ################################################################################
 # NEXRAD DATA
 ################################################################################
-
-# a list of all the filenames for which there is data
-all_nexrad_nc_files = [
-    get_nc_fname(dt=dti, dirname=EXTERNAL)
-    for dti in trange.dts
-    if dti not in MISSING_SNAPSHOTS
-]
-
-
-# create a rule to get all the nexrad netcdf files
-rule nexrad_nc_files:
-    input:
-        all_nexrad_nc_files,
 
 
 # this rule convert grib to netcdf
@@ -90,12 +80,56 @@ rule download_unzip:
         "curl -L {params.url} | gunzip > {output}"
 
 
+# a list of all the filenames for which there is data
+all_nexrad_nc_files = [
+    get_nc_fname(dt=dti, dirname=EXTERNAL)
+    for dti in trange.dts
+    if dti not in MISSING_SNAPSHOTS
+]
+
+
+rule nexrad:
+    input:
+        all_nexrad_nc_files,
+
+
+################################################################################
+# REANALYSIS
+################################################################################
+
+
+# 0.1 degree elevation data
+# see https://confluence.ecmwf.int/display/CKB/ERA5-Land%3A+data+documentation#ERA5Land:datadocumentation-parameterlistingParameterlistings
+elevation_fname = os.path.join(EXTERNAL, "reanalysis", "elevation.nc")
+elevation_url = "https://confluence.ecmwf.int/download/attachments/140385202/geo_1279l4_0.1x0.1.grib2_v4_unpack.nc?version=1&modificationDate=1591979822003&api=v2"
+
+
+rule download_elevation:
+    output:
+        elevation_fname,
+    conda:
+        os.path.join(ENVS, "download_unzip.yml")  # just needs curl
+    params:
+        url=elevation_url,
+    shell:
+        "curl -L {params.url}  > {output}"
+
+
+all_reanalysis_files = [elevation_fname]
+
+
+rule reanalysis:
+    input:
+        all_reanalysis_files,
+
+
 ################################################################################
 # DEFAULT RULE
 ################################################################################
 
 
-# default rule
+# default rule runs everything
 rule default:
     input:
         all_nexrad_nc_files,
+        all_reanalysis_files,
