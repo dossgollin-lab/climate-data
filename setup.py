@@ -1,10 +1,10 @@
 from distutils.core import setup
 
 setup(
-    name="codebase",
+    name="nexrad",
     version="0.1",
     packages=[
-        "codebase",
+        "nexrad",
     ],
     long_description="helpful tools for this analysis",
 )

@@ -20,10 +20,12 @@ You don't need to use the codes in this repository to access the data.
 The data is stored on James's RDF account.
 See the lab manual on Notion for details of accessing the data.
 
+The general philosophy is to avoid storing too much data on a single file.
+To deal with datasets spread across many files, we suggest to leverage the `open_mfdataset` functionality in `xarray`.
+
 ### Datasets included
 
 **The NOAA NEXRAD radar precipitation data** is very useful for many hydrological applications, but it's stored in a confusing structure on a server hosted by Iowa State.
-This makes it hard to use with the user-friendly, accessible, and standard [Pangeo](https://pangeo.io/) ecosystem.
 We use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
 See [docs](./doc/) for more information.
 The basic steps of the analysis are
@@ -31,7 +33,6 @@ The basic steps of the analysis are
 1. Download the `.grib2.gz` file from the Iowa State repository
 1. Unzip the file from `.grib2.gz` to `.grib2`
 1. Use the `cdo` tool to convert from `.grib2` to NetCDF 4 (`.nc`)
-1. Leverage the `open_mfdataset` functionality in `xarray` to handle datasets spread across many files
 
 **ERA5** is a commonly used reanalysis data product.
 At the moment this repository stores:

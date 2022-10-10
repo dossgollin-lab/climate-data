@@ -6,9 +6,9 @@ from datetime import datetime
 import platform
 import os
 
-from codebase import TimeRange
-from codebase.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
-from codebase.namingconventions import get_nc_fname, fname2url
+from nexrad import TimeRange
+from nexrad.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
+from nexrad.namingconventions import get_nc_fname, fname2url
 
 ################################################################################
 # CONSTANTS AND CONFIGURABLE OPTIONS
@@ -59,7 +59,7 @@ NEXRAD = os.path.join(DATADIR, "nexrad")
 # setctomiss,-3 sets all values of -3 to missing
 rule grib2_to_nc:
     input:
-        os.path.join(NEXRAD, "{fname}.grib2"),  # any grib2 file in
+        os.path.join(NEXRAD, "temp", "{fname}.grib2"),  # any grib2 file in
     output:
         os.path.join(NEXRAD, "{fname}.nc"),  # creates a netcdf file
     conda:
@@ -75,7 +75,7 @@ rule grib2_to_nc:
 # first downloads using curl, then unzips using gunzip
 rule download_unzip:
     output:
-        temp("{fname}.grib2"),
+        temp(os.path.join(NEXRAD, "temp", "{fname}.grib2")),
     conda:
         os.path.join(ENVS, "download_unzip.yml")
     params:
