@@ -1,13 +1,17 @@
+# this specifies the folder where the data is stored
+# as outlined in the README, this should be the default configuration
+# for mounting Rice RDF on your machine
 datadir:
   osx: "/Volumes/research/jd82/"
   linux: "/home/jd82/RDF/jd82/"
   windows: "Z:/jd82/"
-bounds:
+
+# some parameters to control the ERA5 reanalysis data
+era5:
   lonmin: -125
   lonmax: -65
   latmin: 25
   latmax: 50
-era5_resolution: 0.25
-era5_years:
-  first: 2015
-  last: 2021
+  resolution: 0.25
+  first_year: 2015
+  last_year: 2021

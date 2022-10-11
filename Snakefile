@@ -84,7 +84,7 @@ rule download_unzip:
         os.path.join(LOGS, "download_unzip", "{fname}.log"),
     shell:
         "curl -L {params.url} | gunzip > {output}"
-        
+
 
 # a list of all the filenames for which there is data
 all_nexrad_nc_files = [
@@ -106,12 +106,12 @@ rule nexrad:
 REANALYSIS = os.path.join(DATADIR, "ERA5")
 
 # turn command line arguments into strings
-str_resolution = " --resolution {}".format(config["era5_resolution"])
+str_resolution = " --resolution {}".format(config["era5"]["resolution"])
 str_bounds = " --lonmin {} --lonmax {} --latmin {} --latmax {}".format(
-    config["bounds"]["lonmin"],
-    config["bounds"]["lonmax"],
-    config["bounds"]["latmin"],
-    config["bounds"]["latmax"],
+    config["era5"]["lonmin"],
+    config["era5"]["lonmax"],
+    config["era5"]["latmin"],
+    config["era5"]["latmax"],
 )
 
 
@@ -165,7 +165,7 @@ rule era5_single_level:
         )
 
 
-era5_years = range(config["era5_years"]["first"], config["era5_years"]["last"] + 1)
+era5_years = range(config["era5"]["first_year"], config["era5"]["last_year"] + 1)
 
 # see https://confluence.ecmwf.int/display/CKB/ERA5%3A+data+documentation#ERA5:datadocumentation-Table1
 uwnd_files = [
