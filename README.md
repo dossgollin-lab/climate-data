@@ -143,3 +143,22 @@ Additionally, if you're messing with `Snakefile` then `snakemake --lint` is a he
 
 We are working to get these to run automatically using GitHub workflows.
 See [this issue](https://github.com/dossgollin-lab/nexrad-xarray/issues/5) and help out if you're goot at GitHub Actions.
+
+### Pro tips
+
+I am terrible at shell stuff so here are some handy commands
+
+After running Snakemake, you may get some time steps that throw an error.
+Snakemake will generate a log file for you with something that looks like
+
+```shell
+Complete log: .snakemake/log/2022-10-11T071442.418042.snakemake.log
+```
+
+To parse this log file to get all the dates that threw errors, something like this will work:
+
+```shell
+grep "output:" PATH_TO_LOG_FILE | cut -c69- | sort | uniq > lines.log
+```
+
+(Note that I'm sure there are better ways to do the string splitting -- feel free to submit a PR or reach out if you're good).

@@ -105,7 +105,7 @@ rule nexrad:
 
 REANALYSIS = os.path.join(DATADIR, "ERA5")
 
-# some strings to reuse
+# turn command line arguments into strings
 str_resolution = " --resolution {}".format(config["era5_resolution"])
 str_bounds = " --lonmin {} --lonmax {} --latmin {} --latmax {}".format(
     config["bounds"]["lonmin"],
