@@ -84,7 +84,7 @@ rule download_unzip:
         os.path.join(LOGS, "download_unzip", "{fname}.log"),
     shell:
         "curl -L {params.url} | gunzip > {output}"
-
+        
 
 # a list of all the filenames for which there is data
 all_nexrad_nc_files = [
@@ -218,7 +218,7 @@ rule reanalysis:
 
 
 # default rule runs everything
-rule default:
+rule all:
     input:
         all_nexrad_nc_files,
         all_reanalysis_files,

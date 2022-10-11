@@ -115,7 +115,7 @@ See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stab
 If you just want to build the dataset, a good default command to use is
 
 ```shell
-snakemake --use-conda --cores all  --rerun-incomplete --keep-going
+snakemake all --use-conda --cores all  --rerun-incomplete --keep-going
 ```
 
 Note:
