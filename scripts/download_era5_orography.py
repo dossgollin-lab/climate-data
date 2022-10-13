@@ -32,16 +32,18 @@ def main() -> None:
         "reanalysis-era5-single-levels",
         {
             "product_type": "reanalysis",
-            "year": "2018",
             "variable": "geopotential",
+            "year": "2018",
+            "month": "01",
             "day": "01",
             "time": "00:00",
-            "month": "01",
+            "area": [args.latmax, args.lonmin, args.latmin, args.lonmax],
             "format": "netcdf",
             "grid": [args.resolution, args.resolution],
         },
         args.outfile,
     )
+
 
 
 if __name__ == "__main__":
