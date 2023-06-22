@@ -6,6 +6,7 @@ channels:
 dependencies:
   - python=3.10 # specify python version
   - black # clean code and make it pretty
+  - dask # needed for open_mfdataset
   - ipykernel # for playing around locally
   - mypy # type checking
   - pylint # catch errors before you make them
