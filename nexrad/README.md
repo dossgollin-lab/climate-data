@@ -1,7 +1,17 @@
----
-title: Email from Jian Zhang
-date: July 7, 2022
----
+# NEXRAD Data
+
+**The NOAA NEXRAD radar precipitation data** is very useful for many hydrological applications, but it's stored in a confusing structure on a server hosted by Iowa State.
+We use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
+See [docs](./doc/) for more information.
+The basic steps of the analysis are
+
+1. Download the `.grib2.gz` file from the Iowa State repository
+1. Unzip the file from `.grib2.gz` to `.grib2`
+1. Use the `cdo` tool to convert from `.grib2` to NetCDF 4 (`.nc`)
+
+## About this data
+
+### Email 2022-07-07
 
 Hi James,
 

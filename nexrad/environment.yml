@@ -1,4 +1,4 @@
-name: climatedata
+name: nexrad
 channels:
   - conda-forge
   - bioconda
@@ -6,6 +6,7 @@ channels:
 dependencies:
   - python=3.10 # specify python version
   - black # clean code and make it pretty
+  - cartopy # mapping
   - cdsapi # ECMWF interface
   - dask # Parallel processing library
   - ipykernel # to run locally
@@ -22,5 +23,3 @@ dependencies:
   - snakemake
   - snakefmt
   - xarray # N-d labeled array library
-  - pip:
-      - -e .
