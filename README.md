@@ -2,7 +2,7 @@
 
 This is a **work in progress**!
 Use this software **with caution**!
-If you find it helpful please consider using the `Issues` tab to identify problems or suggest improvements (there are already several things there)!
+If you find it helpful please usie the `Issues` tab to identify problems or suggest improvements (there are already several things there)!
 
 ## Overview
 
@@ -20,30 +20,17 @@ You don't need to use the codes in this repository to access the data.
 The data is stored on James's RDF account.
 See the lab manual on Notion for details of accessing the data.
 
-The general philosophy is to avoid storing too much data on a single file.
+Our philosophy is to avoid storing too much data on a single file.
 To deal with datasets spread across many files, we suggest to leverage the `open_mfdataset` functionality in `xarray`.
 
-### Datasets included
+### What Datasets are Included?
 
-**The NOAA NEXRAD radar precipitation data** is very useful for many hydrological applications, but it's stored in a confusing structure on a server hosted by Iowa State.
-We use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
-See [docs](./doc/) for more information.
-The basic steps of the analysis are
-
-1. Download the `.grib2.gz` file from the Iowa State repository
-1. Unzip the file from `.grib2.gz` to `.grib2`
-1. Use the `cdo` tool to convert from `.grib2` to NetCDF 4 (`.nc`)
-
-**ERA5** is a commonly used reanalysis data product.
-At the moment this repository stores:
-
-- meridional and zonal wind at 500 hPa
-- surface air temperature
-- elevation (time-invariant, called geopotential)
-- vertical integral of meridional and zonal water vapor flux
-
-from 2015-2022.
-Adding additional years would be straightforward; edit 
+1. Radar precipitation data over the continental United States. For more details, see [the README](./nexrad/README.md).
+1. ERA5 reanalysis data over the continental United States at 0.25 degree resolution. For more details, see [the README](./era5/README.md). Specifically, we have the following variables:
+    * meridional and zonal wind at 500 hPa
+    * surface air temperature
+    * elevation (time-invariant, called geopotential)
+    * vertical integral of meridional and zonal water vapor flux
 
 ## Developing this dataset
 
@@ -51,20 +38,18 @@ If you want to change the files we track or edit this repository, then this sect
 This repository uses [Snakemake](https://snakemake.readthedocs.io/) to define and specify dependencies and workflows.
 If you've never used Snakemake before, you should read up on it.
 
-We also use Anaconda to manage dependencies.
-This includes using Anaconda to specify the dependencies for each workflow rule, making the workflow more concise and reproducible.
-
+We also use conda to manage dependencies.
+This includes using conda to specify the dependencies for each workflow rule, making the workflow more concise and reproducible.
 If you run into problems please use the `Issues` tab on GitHub to bring them to our attention.
 
 ### Installation
 
-You will need [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed.
+You will need [`conda`](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed (or [`mamba`](https://anaconda.org/conda-forge/mamba) for maximum performance).
 Then open a terminal and run the following lines
 
 ```shell
 conda env create --file environment.yml # creates the environment
-conda activate nexrad # activates the environment
-pip install -e . # install the local package in codebase/
+conda activate climatedata # activates the environment
 ```
 
 All other required dependencies are described using Snakemake and anaconda environments (see [Snakemake docs](https://snakemake.readthedocs.io/)).
@@ -104,11 +89,10 @@ When you're just rapidly prototyping things, this lag time is annoying.
 To speed up, you can batch files like this:
 
 ```shell
-snakemake nexrad --use-conda --cores 1 --batch nexrad=1/1000
+snakemake all --use-conda --cores 1 --batch all=1/1000
 ```
 
 See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stable/executing/cli.html#dealing-with-very-large-workflows) for more details.
-
 
 ### Sensible default
 
@@ -120,10 +104,10 @@ snakemake all --use-conda --cores all  --rerun-incomplete --keep-going
 
 Note:
 
-- `use_conda`: use anaconda for environments
-- `--cores 10`: use 10 cores (out of 12)
-- `--rerun-incomplete`: reduces errors if a job was canceled earlier
-- `--keep-going`: if a file causes an error, don't give up
+* `use_conda`: use anaconda for environments
+* `--cores 10`: use 10 cores (out of 12)
+* `--rerun-incomplete`: reduces errors if a job was canceled earlier
+* `--keep-going`: if a file causes an error, don't give up
 
 If you are on a different machine you can learn about how many cores are available with the `lscpu` command.
 
@@ -135,9 +119,9 @@ In a nutshell, this will keep the process running even after you close your `ssh
 Linters should run automatically if you are using VS Code with relevant extensions installed.
 Before submitting a pull request, please `activate nexrad` and then
 
-- `snakefmt .` to reformat the Snakefile
-- `black .` to reformat the code
-- `mypy . --ignore-missing-imports` to run type checks on the code. This is a good way to catch bugs.
+* `snakefmt .` to reformat the Snakefile
+* `black .` to reformat the code
+* `mypy . --ignore-missing-imports` to run type checks on the code. This is a good way to catch bugs.
 
 Additionally, if you're messing with `Snakefile` then `snakemake --lint` is a helpful resource with good suggestions.
 
@@ -160,5 +144,3 @@ To parse this log file to get all the dates that threw errors, something like th
 ```shell
 grep "output:" PATH_TO_LOG_FILE | cut -c69- | sort | uniq > lines.log
 ```
-
-(Note that I'm sure there are better ways to do the string splitting -- feel free to submit a PR or reach out if you're good).
