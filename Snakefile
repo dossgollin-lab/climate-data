@@ -2,9 +2,6 @@ from datetime import datetime
 import platform
 import os
 
-# Define the time range of the analysis
-trange = TimeRange(GAUGECORR_BEGINTIME, datetime(2021, 12, 31, 23))
-
 ################################################################################
 # CONFIGURE DATA / FILE STORAGE LOCATIONS
 ################################################################################

@@ -2,7 +2,7 @@ ERA5_DATA_DIR = os.path.join(DATADIR, "ERA5")  # where the data goes
 ERA5_SRC_DIR = os.path.join(HOMEDIR, "era5")  # this folder
 
 
-configfile: os.path.join(ERA5_SRC_DIR, "era5_config.yaml")
+configfile: os.path.join(ERA5_SRC_DIR, "era5_config.yml")
 
 
 # turn command line arguments into strings
@@ -13,7 +13,7 @@ str_bounds = " --lonmin {} --lonmax {} --latmin {} --latmax {}".format(
     config["era5"]["latmin"],
     config["era5"]["latmax"],
 )
-era5_env = era5_env
+era5_env = os.path.join(ERA5_SRC_DIR, "era5_env.yml")
 
 
 # get the elevation data file
@@ -89,10 +89,10 @@ single_level_files = [
 
 
 # explicitly list the files to download
-all_ERA5_DATA_DIR_files = [elevation_fname] + pressure_files + single_level_files
+all_reanalysis_files = [elevation_fname] + pressure_files + single_level_files
 
 
 # the rule to download all the ERA5 data
 rule ERA5:
     input:
-        all_ERA5_DATA_DIR_files,
+        all_reanalysis_files,

@@ -1,13 +1,19 @@
+# Use our local package
 from util.nexrad.nexrad import TimeRange
 from util.nexrad.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
 from util.nexrad.namingconventions import get_nc_fname, fname2url
 
-
+# Define directories
 NEXRAD_DATA_DIR = os.path.join(DATADIR, "nexrad")
 NEXRAD_SRC_DIR = os.path.join(HOMEDIR, "nexrad")  # this folder
 
 
-configfile: os.path.join(ERA5_SRC_DIR, "era5_config.yaml")
+# Define the configuration file
+# configfile: os.path.join(NEXRAD_SRC_DIR, "nexrad_config.yaml")
+
+
+# Define the time range to access
+trange = TimeRange(GAUGECORR_BEGINTIME, datetime(2023, 5, 31, 23))
 
 
 # this rule convert grib to netcdf

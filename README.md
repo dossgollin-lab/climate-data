@@ -44,7 +44,7 @@ If you run into problems please use the `Issues` tab on GitHub to bring them to 
 
 ### Installation
 
-You will need [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed.
+You will need [`conda`](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed (or [`mamba`](https://anaconda.org/conda-forge/mamba) for maximum performance).
 Then open a terminal and run the following lines
 
 ```shell
@@ -89,7 +89,7 @@ When you're just rapidly prototyping things, this lag time is annoying.
 To speed up, you can batch files like this:
 
 ```shell
-snakemake nexrad --use-conda --cores 1 --batch nexrad=1/1000
+snakemake all --use-conda --cores 1 --batch all=1/1000
 ```
 
 See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stable/executing/cli.html#dealing-with-very-large-workflows) for more details.
