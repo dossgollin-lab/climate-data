@@ -9,8 +9,8 @@ era5:
   last_year: 2022
   vars:
     pressure_level:
-      - u_component_of_wind_500
-      - v_component_of_wind_500
+        - u_component_of_wind
+        - v_component_of_wind
     single_level:
       - vertical_integral_of_eastward_water_vapour_flux
       - vertical_integral_of_northward_water_vapour_flux
