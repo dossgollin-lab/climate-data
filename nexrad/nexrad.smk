@@ -4,7 +4,7 @@ from util.nexrad.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
 from util.nexrad.namingconventions import get_nc_fname, fname2url
 
 # Define directories
-NEXRAD_DATA_DIR = os.path.join(DATADIR, "nexrad")
+NEXRAD_DATA_DIR = os.path.join(DATADIR, "nexrad_snakemake")
 NEXRAD_SRC_DIR = os.path.join(HOMEDIR, "nexrad")  # this folder
 
 
