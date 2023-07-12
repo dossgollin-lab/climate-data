@@ -99,11 +99,12 @@ See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stab
 If you just want to build the dataset, a good default command to use is
 
 ```shell
-snakemake all --use-conda --cores all  --rerun-incomplete --keep-going
+nohup snakemake all --use-conda --cores all  --rerun-incomplete --keep-going
 ```
 
 Note:
 
+* `nohup`: Keep running on a remote machine via `ssh`, even if the connection closes (see [`nohup`](https://www.computerhope.com/unix/unohup.htm) docs).
 * `use_conda`: use anaconda for environments
 * `--cores 10`: use 10 cores (out of 12)
 * `--rerun-incomplete`: reduces errors if a job was canceled earlier
@@ -111,7 +112,6 @@ Note:
 
 If you are on a different machine you can learn about how many cores are available with the `lscpu` command.
 
-If you are running on a remote machine via `ssh`, then prepending the command above with [`nohup`](https://www.computerhope.com/unix/unohup.htm) may be a good idea.
 In a nutshell, this will keep the process running even after you close your `ssh` session.
 
 ### Linters

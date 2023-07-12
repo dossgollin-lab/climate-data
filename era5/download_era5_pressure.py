@@ -44,25 +44,28 @@ def main() -> None:
     parser.add_argument("--latmax", type=float, default=CONUS[1][1])
     args = parser.parse_args()
 
-    if args.year >= 1959:
-        dataset = "reanalysis-era5-pressure-levels"
-    else:
-        dataset = "reanalysis-era5-pressure-levels-preliminary-back-extension"
-
+    dataset = "reanalysis-era5-pressure-levels"
+    product_type = "reanalysis"
+    months = [f"{month:02d}" for month in range(1, 13)] # 01, 02, ..., 12
+    days = [f"{day}" for day in np.arange(1, 32)] # 1, 2, ..., 31
+    hours = [f"{hour:02d}:00" for hour in range(24)]  # 00:00, 01:00, ... 23:00
+    bbox = [args.latmax, args.lonmin, args.latmin, args.lonmax]
+    grid = [args.resolution, args.resolution]
+    
     ecmwf_client = cdsapi.Client()
     ecmwf_client.retrieve(
         dataset,
         {
-            "product_type": "reanalysis",
-            "variable": args.variable,
-            "pressure_level": args.pressure_level,
-            "year": [args.year],
-            "month": [f"{month:02d}" for month in range(1, 13)],
-            "day": [f"{day}" for day in np.arange(1, 31 + 1)],
-            "time": [f"{hour:02d}:00" for hour in range(24)],  # 00:00, 01:00, ... 23:00
-            "area": [args.latmax, args.lonmin, args.latmin, args.lonmax],
+            "product_type": product_type,
             "format": "netcdf",
-            "grid": [args.resolution, args.resolution],
+            "variable": args.variable,
+            "pressure_level": [args.pressure_level],
+            "year": [args.year],
+            "month": months,
+            "day": days,
+            "time": hours,
+            "area": bbox,
+            "grid": grid,
         },
         args.outfile,
     )
