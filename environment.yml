@@ -7,9 +7,8 @@ dependencies:
   - python=3.10 # specify python version
   - black # clean code and make it pretty
   - dask # needed for open_mfdataset
-  - ipython
-  - ipykernel # for playing around locally
   - mypy # type checking
+  - netcdf4
   - pylint # catch errors before you make them
   - snakemake # workflow management engine
   - snakefmt # format snakefiles correctly
@@ -17,3 +16,4 @@ dependencies:
   - pip # install local packages
   - pip:
       - -e .
+      - ipython

@@ -7,3 +7,4 @@ dependencies:
   - netcdf4
   - pandas
   - numpy
+  - dask

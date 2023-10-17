@@ -106,7 +106,7 @@ Note:
 
 * `nohup`: Keep running on a remote machine via `ssh`, even if the connection closes (see [`nohup`](https://www.computerhope.com/unix/unohup.htm) docs).
 * `use_conda`: use anaconda for environments
-* `--cores 10`: use 10 cores (out of 12)
+* `--cores all`: use all cores (workstation has 12)
 * `--rerun-incomplete`: reduces errors if a job was canceled earlier
 * `--keep-going`: if a file causes an error, don't give up
 

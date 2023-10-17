@@ -4,19 +4,16 @@ import xarray as xr
 import pandas as pd
 
 
-def concatenate_files(input_files, output_file):
+def concatenate_files(input_files, output_file, year, month):
     # Open multiple datasets as one
     datasets = xr.open_mfdataset(input_files, combine="by_coords")
 
-    # Identify the year from the data
-    year = pd.to_datetime(datasets.time.values[0]).year
+    # Create a date range that explicitly spans the entire month
+    start_time = f"{year}-{month:02}-01 00:00"
+    end_time = f"{year}-{month:02}-{pd.Timestamp(year, month, 1).days_in_month} 23:00"
+    all_hours = pd.date_range(start=start_time, end=end_time, freq="H")
 
-    # Create a date range that explicitly spans the entire year
-    all_hours = pd.date_range(
-        start=f"{year}-01-01 00:00", end=f"{year}-12-31 23:00", freq="H"
-    )
-
-    # Reindex to ensure data exists for all hours of the year
+    # Reindex to ensure data exists for all hours of the month
     datasets = datasets.reindex(time=all_hours, fill_value=np.nan).sortby("time")
 
     # Save the combined dataset
@@ -37,6 +34,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "output_file", type=str, help="Output file path for the concatenated result."
     )
+    parser.add_argument("year", type=int, help="Year of the data.")
+    parser.add_argument("month", type=int, help="Month of the data.")
     args = parser.parse_args()
 
-    concatenate_files(args.input_files, args.output_file)
+    concatenate_files(args.input_files, args.output_file, args.year, args.month)

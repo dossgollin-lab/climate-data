@@ -12,7 +12,7 @@ NEXRAD_DATA_DIR = os.path.join(DATADIR, "NEXRAD")
 NEXRAD_SRC_DIR = os.path.join(HOMEDIR, "nexrad")  # this folder
 
 # Keep temporary files local because I/O to RDF is super slow
-NEXRAD_TEMP_DIR = "~/Downloads/NEXRAD/temp"
+NEXRAD_TEMP_DIR = "/home/jd82/Downloads/NEXRAD/temp"
 
 
 # Define the configuration file
@@ -29,7 +29,7 @@ t_nonmissing = [t for t in trange.dts if t not in MISSING_SNAPSHOTS]
 # first downloads using curl, then unzips using gunzip
 rule download_unzip:
     output:
-        temp(os.path.join(NEXRAD_TEMP_DIR, "{fname}.grib2")),
+        os.path.join(NEXRAD_TEMP_DIR, "{fname}.grib2"),
     conda:
         os.path.join(NEXRAD_SRC_DIR, "download_unzip.yml")
     params:
@@ -49,7 +49,7 @@ rule grib2_to_nc:
     input:
         os.path.join(NEXRAD_TEMP_DIR, "{fname}.grib2"),
     output:
-        temp(os.path.join(NEXRAD_TEMP_DIR, "{fname}.nc")),
+        os.path.join(NEXRAD_TEMP_DIR, "{fname}.nc"),
     conda:
         os.path.join(NEXRAD_SRC_DIR, "grib2_to_nc.yml")
     log:
@@ -64,20 +64,26 @@ rule combine_files:
         files=lambda wildcards: [
             os.path.join(NEXRAD_TEMP_DIR, get_nc_fname(dt))
             for dt in t_nonmissing
-            if dt.year == int(wildcards.year)
+            if dt.year == int(wildcards.year) and dt.month == int(wildcards.month)
         ],
         script=os.path.join(NEXRAD_SRC_DIR, "combine_files.py"),
     output:
-        os.path.join(NEXRAD_DATA_DIR, "{year}.nc"),
+        os.path.join(NEXRAD_DATA_DIR, "{year}-{month}.nc"),
     conda:
         os.path.join(NEXRAD_SRC_DIR, "combine_files.yml")
     shell:
-        "python {input.script} {' '.join(input.files)} {output}"
+        "python {input.script} {input.files} {output} {wildcards.year} {wildcards.month}"
 
 
 # a list of all the filenames for which there is data
 years = set([dt.year for dt in trange.dts])
-all_nexrad_nc_files = [os.path.join(NEXRAD_DATA_DIR, f"{year}.nc") for year in years]
+months = range(1, 13)
+all_nexrad_nc_files = [
+    os.path.join(NEXRAD_DATA_DIR, f"{year}-{month}.nc")
+    for year in years
+    for month in months
+]
+
 
 
 rule nexrad:
