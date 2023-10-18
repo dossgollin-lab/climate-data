@@ -45,12 +45,12 @@ def main() -> None:
 
     dataset = "reanalysis-era5-single-levels"
     product_type = "reanalysis"
-    months = [f"{month:02d}" for month in range(1, 13)] # 01, 02, ..., 12
-    days = [f"{day}" for day in np.arange(1, 32)] # 1, 2, ..., 31
+    months = [f"{month:02d}" for month in range(1, 13)]  # 01, 02, ..., 12
+    days = [f"{day}" for day in np.arange(1, 32)]  # 1, 2, ..., 31
     hours = [f"{hour:02d}:00" for hour in range(24)]  # 00:00, 01:00, ... 23:00
     bbox = [args.latmax, args.lonmin, args.latmin, args.lonmax]
     grid = [args.resolution, args.resolution]
-    
+
     ecmwf_client = cdsapi.Client()
     ecmwf_client.retrieve(
         dataset,

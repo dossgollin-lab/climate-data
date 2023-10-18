@@ -6,7 +6,20 @@ import pandas as pd
 
 def concatenate_files(input_files, output_file, year, month):
     # Open multiple datasets as one
-    datasets = xr.open_mfdataset(input_files, combine="by_coords")
+    datasets = (
+        xr.open_mfdataset(input_files, combine="by_coords")
+        .sortby("time")
+        .isel(alt=0)
+        .drop("alt")
+    )
+
+    # TESTING ONLY
+    datasets = datasets.isel(time=slice(0, 3))
+
+    for var in ["param9.6.209", "param37.6.209"]:
+        if var in datasets.data_vars:
+            datasets = datasets.rename({var: "precip"})
+            break
 
     # Create a date range that explicitly spans the entire month
     start_time = f"{year}-{month:02}-01 00:00"
@@ -17,7 +30,7 @@ def concatenate_files(input_files, output_file, year, month):
     datasets = datasets.reindex(time=all_hours, fill_value=np.nan).sortby("time")
 
     # Save the combined dataset
-    datasets.to_netcdf(output_file)
+    datasets.load().to_netcdf(output_file, format="NETCDF4")
 
     # Close the datasets
     datasets.close()

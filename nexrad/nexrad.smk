@@ -8,7 +8,8 @@ from util.nexrad.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
 from util.nexrad.namingconventions import get_nc_fname, fname2url
 
 # Define directories
-NEXRAD_DATA_DIR = os.path.join(DATADIR, "NEXRAD")
+#NEXRAD_DATA_DIR = os.path.join(DATADIR, "NEXRAD")
+NEXRAD_DATA_DIR = "/home/jd82/Downloads/NEXRAD/"
 NEXRAD_SRC_DIR = os.path.join(HOMEDIR, "nexrad")  # this folder
 
 # Keep temporary files local because I/O to RDF is super slow
@@ -19,7 +20,8 @@ NEXRAD_TEMP_DIR = "/home/jd82/Downloads/NEXRAD/temp"
 # configfile: os.path.join(NEXRAD_SRC_DIR, "nexrad_config.yaml")
 
 # Define the time range to access
-ENDTIME = datetime(2023, 9, 30, 23)
+current_date = datetime.now().date()
+ENDTIME = datetime.combine(current_date - timedelta(days=10), datetime.min.time()) + timedelta(hours=23)
 trange = TimeRange(GAUGECORR_BEGINTIME, ENDTIME)
 t_nonmissing = [t for t in trange.dts if t not in MISSING_SNAPSHOTS]
 
@@ -29,7 +31,7 @@ t_nonmissing = [t for t in trange.dts if t not in MISSING_SNAPSHOTS]
 # first downloads using curl, then unzips using gunzip
 rule download_unzip:
     output:
-        os.path.join(NEXRAD_TEMP_DIR, "{fname}.grib2"),
+        temp(os.path.join(NEXRAD_TEMP_DIR, "{fname}.grib2")),
     conda:
         os.path.join(NEXRAD_SRC_DIR, "download_unzip.yml")
     params:
@@ -55,7 +57,7 @@ rule grib2_to_nc:
     log:
         os.path.join(LOGS, "grib2_to_nc", "{fname}.log"),
     shell:
-        "cdo -r -f nc4 -z zip_1 setctomiss,-3 -copy {input} {output}"
+        "cdo -r -f nc4 setctomiss,-3 -copy {input} {output}"
 
 
 # Rule to combine all 1-hour files from an entire year into a single file

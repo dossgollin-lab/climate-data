@@ -7,12 +7,14 @@ dependencies:
   - python=3.10 # specify python version
   - black # clean code and make it pretty
   - dask # needed for open_mfdataset
+  - matplotlib
   - mypy # type checking
   - netcdf4
   - pylint # catch errors before you make them
   - snakemake # workflow management engine
   - snakefmt # format snakefiles correctly
   - xarray # N-d labeled array library
+  - zstandard
   - pip # install local packages
   - pip:
       - -e .
