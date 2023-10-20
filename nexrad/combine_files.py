@@ -1,10 +1,10 @@
-import argparse
 import numpy as np
 import xarray as xr
 import pandas as pd
+import os
 
 
-def concatenate_files(input_files, output_file, year, month):
+def concatenate_files(input_files, output_dir, year, month, bounding_boxes):
     # Open multiple datasets as one
     datasets = (
         xr.open_mfdataset(input_files, combine="by_coords")
@@ -12,9 +12,6 @@ def concatenate_files(input_files, output_file, year, month):
         .isel(alt=0)
         .drop("alt")
     )
-
-    # TESTING ONLY
-    datasets = datasets.isel(time=slice(0, 3))
 
     for var in ["param9.6.209", "param37.6.209"]:
         if var in datasets.data_vars:
@@ -29,26 +26,27 @@ def concatenate_files(input_files, output_file, year, month):
     # Reindex to ensure data exists for all hours of the month
     datasets = datasets.reindex(time=all_hours, fill_value=np.nan).sortby("time")
 
-    # Save the combined dataset
-    datasets.load().to_netcdf(output_file, format="NETCDF4")
+    # Loop through each bounding box and save a subset of the dataset
+    for bbox in bounding_boxes:
+        subset = datasets.sel(
+            lon=slice(bbox["lon_min"], bbox["lon_max"]),
+            lat=slice(bbox["lat_min"], bbox["lat_max"]),
+        )
+        output_file = os.path.join(
+            output_dir, f"data_{bbox['name']}_{year}_{month:02}.nc"
+        )
+        subset.load().to_netcdf(output_file, format="NETCDF4")
 
     # Close the datasets
     datasets.close()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Concatenate netCDF files.")
-    parser.add_argument(
-        "input_files",
-        type=str,
-        nargs="+",
-        help="List of input netCDF files to concatenate.",
-    )
-    parser.add_argument(
-        "output_file", type=str, help="Output file path for the concatenated result."
-    )
-    parser.add_argument("year", type=int, help="Year of the data.")
-    parser.add_argument("month", type=int, help="Month of the data.")
-    args = parser.parse_args()
+    # Use the snakemake object to get inputs, outputs, and parameters
+    input_files = snakemake.input
+    output_dir = snakemake.params.output_dir
+    year = snakemake.params.year
+    month = snakemake.params.month
+    bounding_boxes = snakemake.config["bounding_boxes"]
 
-    concatenate_files(args.input_files, args.output_file, args.year, args.month)
+    concatenate_files(input_files, output_dir, year, month, bounding_boxes)

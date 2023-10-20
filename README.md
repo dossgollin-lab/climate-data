@@ -89,7 +89,7 @@ When you're just rapidly prototyping things, this lag time is annoying.
 To speed up, you can batch files like this:
 
 ```shell
-nohup snakemake ~/RDF/jd82/NEXRAD/2020-11.nc --use-conda --cores all --rerun-incomplete
+nohup snakemake /home/jd82/RDF/jd82/NEXRAD/2020-11.nc --use-conda --cores all --rerun-incomplete &
 ```
 
 See [dealing with very large workflows](https://snakemake.readthedocs.io/en/stable/executing/cli.html#dealing-with-very-large-workflows) for more details.

@@ -8,13 +8,8 @@ from util.nexrad.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
 from util.nexrad.namingconventions import get_nc_fname, fname2url
 
 # Define directories
-#NEXRAD_DATA_DIR = os.path.join(DATADIR, "NEXRAD")
-NEXRAD_DATA_DIR = "/home/jd82/Downloads/NEXRAD/"
+NEXRAD_DATA_DIR = os.path.join(DATADIR, "NEXRAD")
 NEXRAD_SRC_DIR = os.path.join(HOMEDIR, "nexrad")  # this folder
-
-# Keep temporary files local because I/O to RDF is super slow
-NEXRAD_TEMP_DIR = "/home/jd82/Downloads/NEXRAD/temp"
-
 
 # Define the configuration file
 # configfile: os.path.join(NEXRAD_SRC_DIR, "nexrad_config.yaml")
@@ -60,7 +55,7 @@ rule grib2_to_nc:
         "cdo -r -f nc4 setctomiss,-3 -copy {input} {output}"
 
 
-# Rule to combine all 1-hour files from an entire year into a single file
+# Rule to combine all 1-hour files from an entire month into a single file for each region
 rule combine_files:
     input:
         files=lambda wildcards: [
@@ -70,22 +65,24 @@ rule combine_files:
         ],
         script=os.path.join(NEXRAD_SRC_DIR, "combine_files.py"),
     output:
-        os.path.join(NEXRAD_DATA_DIR, "{year}-{month}.nc"),
+        os.path.join(NEXRAD_DATA_DIR, "{region}", "{year}-{month}.nc"),
+    params:
+        output_dir=NEXRAD_DATA_DIR,
     conda:
         os.path.join(NEXRAD_SRC_DIR, "combine_files.yml")
     shell:
-        "python {input.script} {input.files} {output} {wildcards.year} {wildcards.month}"
-
+        "python {input.script} {input.files} {params.output_dir} {wildcards.year} {wildcards.month}"
 
 # a list of all the filenames for which there is data
+regions = [bbox['name'] for bbox in config['bounding_boxes']]
 years = set([dt.year for dt in trange.dts])
 months = range(1, 13)
 all_nexrad_nc_files = [
-    os.path.join(NEXRAD_DATA_DIR, f"{year}-{month}.nc")
+    os.path.join(NEXRAD_DATA_DIR, region, f"{year}-{month}.nc")
+    for region in regions
     for year in years
     for month in months
 ]
-
 
 
 rule nexrad:
