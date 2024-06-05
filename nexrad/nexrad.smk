@@ -5,14 +5,12 @@ import pandas as pd
 # Use our local package
 from util.nexrad.nexrad import TimeRange
 from util.nexrad.const import GAUGECORR_BEGINTIME, MISSING_SNAPSHOTS
-from util.nexrad.namingconventions import get_nc_fname, fname2url
+from util.nexrad.namingconventions import get_nc_fname, fname2url, get_fname_base
 
 # Define directories
 NEXRAD_DATA_DIR = os.path.join(DATADIR, "NEXRAD")
 NEXRAD_SRC_DIR = os.path.join(HOMEDIR, "nexrad")  # this folder
-
-# Define the configuration file
-# configfile: os.path.join(NEXRAD_SRC_DIR, "nexrad_config.yaml")
+NEXRAD_TEMP_DIR = os.path.join(HOMEDIR, "temp", "nexrad") # a temp folder
 
 # Define the time range to access
 current_date = datetime.now().date()
@@ -26,7 +24,7 @@ t_nonmissing = [t for t in trange.dts if t not in MISSING_SNAPSHOTS]
 # first downloads using curl, then unzips using gunzip
 rule download_unzip:
     output:
-        temp(os.path.join(NEXRAD_TEMP_DIR, "{fname}.grib2")),
+        os.path.join(NEXRAD_TEMP_DIR, "{fname}.grib2"),
     conda:
         os.path.join(NEXRAD_SRC_DIR, "download_unzip.yml")
     params:
@@ -46,7 +44,7 @@ rule grib2_to_nc:
     input:
         os.path.join(NEXRAD_TEMP_DIR, "{fname}.grib2"),
     output:
-        os.path.join(NEXRAD_TEMP_DIR, "{fname}.nc"),
+        os.path.join(NEXRAD_DATA_DIR, "{fname}.nc"),
     conda:
         os.path.join(NEXRAD_SRC_DIR, "grib2_to_nc.yml")
     log:
@@ -55,35 +53,10 @@ rule grib2_to_nc:
         "cdo -r -f nc4 setctomiss,-3 -copy {input} {output}"
 
 
-# Rule to combine all 1-hour files from an entire month into a single file for each region
-rule combine_files:
-    input:
-        files=lambda wildcards: [
-            os.path.join(NEXRAD_TEMP_DIR, get_nc_fname(dt))
-            for dt in t_nonmissing
-            if dt.year == int(wildcards.year) and dt.month == int(wildcards.month)
-        ],
-        script=os.path.join(NEXRAD_SRC_DIR, "combine_files.py"),
-    output:
-        os.path.join(NEXRAD_DATA_DIR, "{region}", "{year}-{month}.nc"),
-    params:
-        output_dir=NEXRAD_DATA_DIR,
-    conda:
-        os.path.join(NEXRAD_SRC_DIR, "combine_files.yml")
-    shell:
-        "python {input.script} {input.files} {params.output_dir} {wildcards.year} {wildcards.month}"
-
 # a list of all the filenames for which there is data
-regions = [bbox['name'] for bbox in config['bounding_boxes']]
-years = set([dt.year for dt in trange.dts])
-months = range(1, 13)
 all_nexrad_nc_files = [
-    os.path.join(NEXRAD_DATA_DIR, region, f"{year}-{month}.nc")
-    for region in regions
-    for year in years
-    for month in months
+    get_nc_fname(dt, dirname=NEXRAD_DATA_DIR) for dt in t_nonmissing
 ]
-
 
 rule nexrad:
     input:

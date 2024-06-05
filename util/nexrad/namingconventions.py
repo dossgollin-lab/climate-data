@@ -28,9 +28,16 @@ def get_fname_base(dt: datetime, dirname: str = None) -> str:
     """
     varname = get_varname(dt)
     dt_str = dt.strftime(DT_FORMAT)
-    fname = f"{varname}_00.00_{dt_str}"
+    dt_year = dt.strftime("%Y")
+    dt_month = dt.strftime("%m")
+    dt_day = dt.strftime("%d")
+    dt_fname = f"{varname}_00.00_{dt_str}"
+
+    # Generate the nested path
+    fname = os.path.join(dt_year, dt_month, dt_day, dt_fname)
     if dirname:
         fname = os.path.join(dirname, fname)
+
     return fname
 
 
@@ -61,6 +68,10 @@ def get_url(dt: datetime) -> str:
     """
     date_str = dt.strftime("%Y/%m/%d")
     fname = get_gz_fname(dt)
+
+    # drop the folder structure
+    fname = fname.split("/")[-1]
+
     varname = get_varname(dt)
     return f"https://mtarchive.geol.iastate.edu/{date_str}/mrms/ncep/{varname}/{fname}"
 
@@ -69,7 +80,13 @@ def fname2dt(fname: str) -> datetime:
     """
     Parse a filename to get the corresponding datetime
     """
-    dt_str = fname.split("_00.00_")[1].split(".")[0]
+    # Extract the filename part, ignoring the directory structure
+    basename = os.path.basename(fname)
+
+    # Extract the datetime string from the basename
+    dt_str = basename.split("_00.00_")[1].split(".")[0]
+
+    # Parse the datetime string to a datetime object
     return datetime.strptime(dt_str, DT_FORMAT)
 
 

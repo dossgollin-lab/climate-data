@@ -6,10 +6,12 @@ channels:
 dependencies:
   - python=3.10 # specify python version
   - black # clean code and make it pretty
+  - cartopy
   - dask # needed for open_mfdataset
   - matplotlib
   - mypy # type checking
   - netcdf4
+  - pandas
   - pylint # catch errors before you make them
   - snakemake # workflow management engine
   - snakefmt # format snakefiles correctly
