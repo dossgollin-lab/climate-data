@@ -3,8 +3,8 @@ This script will download ONE YEAR OF ERA5 HOURLY REANALYSIS DATA over the given
 (defaults to CONUS). Storing one year of data in one file makes it easier to work with
 and more resilient to errors in downloading.
 
-You need to specify the year, the output file name, and the variable. Optionally, specify
-the domain. The default domain is CONUS.
+You need to specify the year, the output file name, the variable, and the pressure level.
+Optionally, specify the domain. The default domain is CONUS.
 
 The variable should follow the ERA5 documentation. Some common ones: 
 - 2m_temperature
@@ -33,9 +33,9 @@ def main() -> None:
 
     # parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--year", type=int)
     parser.add_argument("-o", "--outfile", type=str)
     parser.add_argument("--variable", type=str)
+    parser.add_argument("--year", type=int)
     parser.add_argument("--resolution", type=float)
     parser.add_argument("--lonmin", type=float, default=CONUS[0][0])
     parser.add_argument("--lonmax", type=float, default=CONUS[0][1])
@@ -43,24 +43,27 @@ def main() -> None:
     parser.add_argument("--latmax", type=float, default=CONUS[1][1])
     args = parser.parse_args()
 
-    if args.year >= 1959:
-        dataset = "reanalysis-era5-single-levels"
-    else:
-        dataset = "reanalysis-era5-single-levels-preliminary-back-extension"
+    dataset = "reanalysis-era5-single-levels"
+    product_type = "reanalysis"
+    months = [f"{month:02d}" for month in range(1, 13)]  # 01, 02, ..., 12
+    days = [f"{day}" for day in np.arange(1, 32)]  # 1, 2, ..., 31
+    hours = [f"{hour:02d}:00" for hour in range(24)]  # 00:00, 01:00, ... 23:00
+    bbox = [args.latmax, args.lonmin, args.latmin, args.lonmax]
+    grid = [args.resolution, args.resolution]
 
     ecmwf_client = cdsapi.Client()
     ecmwf_client.retrieve(
         dataset,
         {
-            "product_type": "reanalysis",
+            "product_type": product_type,
+            "format": "netcdf",
             "variable": args.variable,
             "year": [args.year],
-            "month": [f"{month:02d}" for month in range(1, 13)],
-            "day": [f"{day}" for day in np.arange(1, 31 + 1)],
-            "time": [f"{hour:02d}:00" for hour in range(24)],  # 00:00, 01:00, ... 23:00
-            "area": [args.latmax, args.lonmin, args.latmin, args.lonmax],
-            "format": "netcdf",
-            "grid": [args.resolution, args.resolution],
+            "month": months,
+            "day": days,
+            "time": hours,
+            "area": bbox,
+            "grid": grid,
         },
         args.outfile,
     )

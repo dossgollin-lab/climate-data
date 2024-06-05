@@ -1,0 +1,6 @@
+bounding_boxes:
+  - name: "Houston_Woodlands_Galveston"
+    lon_min: -96.0
+    lon_max: -94.5
+    lat_min: 28.5
+    lat_max: 30.5

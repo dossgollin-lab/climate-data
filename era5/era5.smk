@@ -73,18 +73,19 @@ rule era5_single_level:
 era5_years = range(config["era5"]["first_year"], config["era5"]["last_year"] + 1)
 
 # specify the files to download
-pressure_vars = config["era5"]["vars"]["pressure_level"]
-pressure_files = [
-    os.path.join(ERA5_DATA_DIR, "pressure_level", f"{var}_500_{year}.nc")
-    for year in era5_years
-    for var in pressure_vars
-] # ugly hack, currently forcing 500hPa
+pressure_files = []
+for year in era5_years:
+    for var in config["era5"]["vars"]["pressure_level"]:
+        varname = var["name"]
+        levels = var["levels"]
+        for level in levels:
+            pressure_files.append(os.path.join(ERA5_DATA_DIR, "pressure_level", f"{varname}_{level}_{year}.nc"))
 
 single_level_vars = config["era5"]["vars"]["single_level"]
 single_level_files = [
     os.path.join(ERA5_DATA_DIR, "single_level", f"{var}_{year}.nc")
     for year in era5_years
-    for var in pressure_vars
+    for var in single_level_vars
 ]
 
 

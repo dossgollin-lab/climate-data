@@ -110,6 +110,9 @@ MISSING_SNAPSHOTS = [
     datetime(2021, 9, 16, 20),
     datetime(2021, 9, 16, 21),
     datetime(2021, 9, 16, 22),
+    datetime(2024, 3, 17, 22),
+    datetime(2024, 3, 18, 22),
+    datetime(2024, 3, 19, 22),
 ]
 
 
