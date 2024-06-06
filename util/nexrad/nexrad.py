@@ -16,6 +16,7 @@ def assert_valid_datetime(dt: datetime) -> None:
     assert dt.minute == 0
     assert dt.second == 0
     assert dt.microsecond == 0
+    assert dt not in MISSING_SNAPSHOTS, f"Data is missing for {dt_str}"
 
 
 class TimeRange:
@@ -26,7 +27,8 @@ class TimeRange:
         assert_valid_datetime(etime)
         self.stime = stime
         self.etime = etime
-        self.dts = pd.date_range(self.stime, self.etime, freq="H")
+        self.dt_all = pd.date_range(self.stime, self.etime, freq="H")
+        self.dt_valid = [dt for dt in self.dt_all if dt not in MISSING_SNAPSHOTS]
 
     def printbounds(self) -> str:
         fmt = "%Y-%m-%d %H:%M:%S"
