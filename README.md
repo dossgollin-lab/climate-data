@@ -70,6 +70,7 @@ sudo mount.cifs -o username=jd82,domain=ADRICE,mfsymlinks,rw,vers=3.0,sign,uid=j
 
 will mount the RDF to `$HOME/RDF` for user `jd82`.
 If you copy and paste, be aware that this documentation doesn't make very clear that you need to change the `uid`.
+You can find this with the `id` command.
 
 ### Running codes
 

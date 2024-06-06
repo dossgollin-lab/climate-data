@@ -36,5 +36,5 @@ include: "era5/era5.smk"
 # default rule runs everything
 rule all:
     input:
-        all_nexrad_nc_files,
+        all_nexrad_grib2_files,
         all_reanalysis_files,

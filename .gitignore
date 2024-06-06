@@ -11,3 +11,4 @@ nohup.out
 nexrad/__pycache__/
 .mypy_cache/
 temp/
+nexrad/*.nc
