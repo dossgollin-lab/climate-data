@@ -7,18 +7,13 @@ def subset_and_convert(input_file, output_file, lon_min, lon_max, lat_min, lat_m
     Subset a GRIB2 file and save it as a NetCDF4 file.
     """
     # Open the GRIB2 file
-    ds = xr.open_dataset(input_file, engine="cfgrib")
+    ds = xr.open_dataset(input_file, engine="cfgrib", decode_timedelta=False)
 
     # Subset the data
     ds_subset = ds.sel(longitude=slice(lon_min, lon_max), latitude=slice(lat_max, lat_min))
 
-    # Ensure the output directory exists
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
     # Save the subset as a NetCDF4 file
-    ds_subset.to_netcdf(output_file)
-
-    print(f"Saved subset to {output_file}")
+    ds_subset.to_netcdf(output_file, format="NETCDF4")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Subset a GRIB2 file and save as NetCDF4.")
