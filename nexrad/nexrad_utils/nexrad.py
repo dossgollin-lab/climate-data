@@ -27,7 +27,7 @@ class TimeRange:
         assert_valid_datetime(etime)
         self.stime = stime
         self.etime = etime
-        self.dt_all = pd.date_range(self.stime, self.etime, freq="H")
+        self.dt_all = pd.date_range(self.stime, self.etime, freq="h")
         self.dt_valid = [dt for dt in self.dt_all if dt not in MISSING_SNAPSHOTS]
 
     def printbounds(self) -> str:
