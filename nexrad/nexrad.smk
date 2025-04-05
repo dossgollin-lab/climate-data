@@ -10,7 +10,11 @@ from nexrad_utils.namingconventions import get_nc_fname, fname2url, get_grib2_fn
 # specify directories to save the data
 NEXRAD_DATA_DIR = os.path.join(DATADIR, "NEXRAD")  # final data goes here
 NEXRAD_SRC_DIR = os.path.join(HOMEDIR, "nexrad")  # this folder
-NEXRAD_TEMP_DIR = os.path.join(HOMEDIR, "temp", "nexrad")  # temporary folder
+
+
+# Load the nexrad_config.yml file
+configfile: os.path.join(NEXRAD_SRC_DIR, "nexrad_config.yml")
+
 
 # Define the time range to access
 current_date = datetime.now().date()
@@ -45,7 +49,39 @@ all_nexrad_grib2_files = [
     get_grib2_fname(dt, dirname=NEXRAD_DATA_DIR) for dt in t_nonmissing
 ]
 
+# Access bounding_boxes from the loaded configuration
+bounding_boxes = config["bounding_boxes"]
+
+# Define the NetCDF4 output files for each bounding box and GRIB2 file combination
+all_nexrad_nc_files = [
+    os.path.join(
+        NEXRAD_DATA_DIR,
+        bbox["name"],
+        f"{os.path.basename(grib2_file).replace('.grib2', '.nc')}",
+    )
+    for grib2_file in all_nexrad_grib2_files
+    for bbox in bounding_boxes
+]
+
+
+rule grib2_to_netcdf4:
+    input:
+        script=os.path.join(NEXRAD_SRC_DIR, "grib2_to_netcdf4.py"),
+    output:
+        nc_file=os.path.join(NEXRAD_DATA_DIR, "{bbox_name}", "{fname}.nc"),
+    params:
+        grib2_file=os.path.join(NEXRAD_DATA_DIR, "{fname}.grib2"),
+        lon_min="{lon_min}",
+        lon_max="{lon_max}",
+        lat_min="{lat_min}",
+        lat_max="{lat_max}",
+    conda:
+        os.path.join(NEXRAD_SRC_DIR, "grib2_to_netcdf4.yml")
+    shell:
+        "python {input.script} --input {params.grib2_file} --output {output.nc_file} --lonmin {params.lon_min} --lonmax {params.lon_max} --latmin {params.lat_min} --latmax {params.lat_max}"
+
 
 rule nexrad:
     input:
         all_nexrad_grib2_files,
+        all_nexrad_nc_files,
