@@ -6,11 +6,15 @@ channels:
 dependencies:
   - python>=3.11
   - black # clean code and make it pretty
+  - cfgrib # read grib files
   - pandas # dataframes and datetime
+  - ipython # for interactive exploring
+  - jupyter
   - mypy # type checking
   - pylint # catch errors before you make them
   - snakemake # workflow management engine
   - snakefmt # format snakefiles correctly
+  - xarray # for all gridded climate data
   - pip # install local packages
   - pip:
       - -e ./nexrad
