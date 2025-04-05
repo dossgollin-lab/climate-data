@@ -4,20 +4,13 @@ channels:
   - bioconda # needed for snakemake
   - defaults # backup
 dependencies:
-  - python=3.12
+  - python>=3.11
   - black # clean code and make it pretty
-  - cartopy # plotting on a map
-  - cfgrib # to read in grib files
-  - dask # needed for open_mfdataset
-  - matplotlib # useful for plotting
-  - ipython
-  - jupyter # notebooks
+  - pandas # dataframes and datetime
   - mypy # type checking
-  - netcdf4 # read / write netcdf4 files
   - pylint # catch errors before you make them
   - snakemake # workflow management engine
   - snakefmt # format snakefiles correctly
-  - xarray # N-d labeled array library
   - pip # install local packages
   - pip:
-      - -e .
+      - -e ./nexrad
