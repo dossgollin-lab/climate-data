@@ -1,3 +1,7 @@
+# this environment file will let you
+# 1) run the code to generate and update the datasets
+# 2) do basic exploration of the data
+# a future task could separate into a core and exploration environment, but this is low priority
 name: climatedata
 channels:
   - conda-forge # the best place for community developed package
@@ -7,14 +11,16 @@ dependencies:
   - python>=3.11
   - black # clean code and make it pretty
   - cfgrib # read grib files
-  - pandas # dataframes and datetime
+  - dask # parallel processing
   - ipython # for interactive exploring
-  - jupyter
+  - jupyter # for notebooks
+  - matplotlib # core visualizations
   - mypy # type checking
-  - netcdf4
+  - netcdf4 # read netcdf files
+  - pandas # dataframes and datetime
   - pylint # catch errors before you make them
-  - snakemake # workflow management engine
   - snakefmt # format snakefiles correctly
+  - snakemake # workflow management engine
   - xarray # for all gridded climate data
   - pip # install local packages
   - pip:

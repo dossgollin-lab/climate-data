@@ -1,4 +1,8 @@
 bounding_boxes:
+  # for each bounding box, we will convert the grib2 file to a netcdf file covering the area
+  # this is faster and easier to work with
+  # all coordinates are in degrees (longitudes go from 0 to 360)
+
   - name: "Houston_Woodlands_Galveston"
     lon_min: 264.0
     lon_max: 265.5

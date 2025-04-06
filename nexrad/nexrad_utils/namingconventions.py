@@ -64,7 +64,7 @@ def get_nc_fname(dt: datetime, dirname: str = None, bbox_name: str= None) -> str
     if bbox_name is None:
         return get_fname_base(dt=dt, dirname=dirname) + ".nc"
     else:
-        return get_fname_base(dt=dt, dirname=dirname) + f"_{bbox_name}.nc"
+        return get_fname_base(dt=dt, dirname=os.path.join(dirname, bbox_name)) + f".nc"
 
 
 def get_url(dt: datetime) -> str:

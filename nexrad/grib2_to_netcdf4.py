@@ -7,7 +7,9 @@ def subset_and_convert(input_file, output_file, lon_min, lon_max, lat_min, lat_m
     Subset a GRIB2 file and save it as a NetCDF4 file.
     """
     # Open the GRIB2 file
-    ds = xr.open_dataset(input_file, engine="cfgrib", decode_timedelta=False)
+    ds = xr.open_dataarray(input_file, engine="cfgrib", decode_timedelta=False)
+    ds.name = "precipitation"
+    ds.attrs = {"units":  "mm"}
 
     # Subset the data
     ds_subset = ds.sel(longitude=slice(lon_min, lon_max), latitude=slice(lat_max, lat_min))
