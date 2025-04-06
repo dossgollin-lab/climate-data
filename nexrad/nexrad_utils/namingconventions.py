@@ -55,11 +55,16 @@ def get_grib2_fname(dt: datetime, dirname: str = None) -> str:
     return get_fname_base(dt=dt, dirname=dirname) + ".grib2"
 
 
-def get_nc_fname(dt: datetime, dirname: str = None) -> str:
+def get_nc_fname(dt: datetime, dirname: str = None, bbox_name: str= None) -> str:
     """
     Get the local .netcdf4 filename for a given date time
     """
-    return get_fname_base(dt=dt, dirname=dirname) + ".nc"
+    if dirname is None:
+        raise ValueError("dirname must be provided")
+    if bbox_name is None:
+        return get_fname_base(dt=dt, dirname=dirname) + ".nc"
+    else:
+        return get_fname_base(dt=dt, dirname=os.path.join(dirname, bbox_name)) + f".nc"
 
 
 def get_url(dt: datetime) -> str:

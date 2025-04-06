@@ -1,0 +1,10 @@
+name: grib2_to_netcdf4
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - cfgrib
+  - netcdf4
+  - numpy
+  - xarray

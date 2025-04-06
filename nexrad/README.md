@@ -2,14 +2,37 @@
 
 **The NOAA NEXRAD radar precipitation data** is very useful for many hydrological applications, but it's stored in a confusing structure on a server hosted by Iowa State.
 We use the `MultiSensor_QPE_01H_Pass2` dataset when available and the `GaugeCorr_QPE_01H` for earlier periods.
-See [docs](./doc/) for more information.
-The basic steps of the analysis are
+See below for more information.
 
-1. Download the `.grib2.gz` file from the Iowa State repository
-1. Unzip the file from `.grib2.gz` to `.grib2`
-1. Use the `cdo` tool to convert from `.grib2` to NetCDF 4 (`.nc`)
+The first step of the analysis is to download the `.grib2.gz` file from the Iowa State repository, then unzip the file from `.grib2.gz` to `.grib2`.
+This give us a CONUS-scale `grib2` file.
+
+The next step is to define a bounding box for any areas of interest, in [`nexrad_config.yml`](nexrad_config.yml).
+Each bounding box has a name and a box of coordinates.
+For each bounding box, we extract the data from the grib2 file and save it as a `.nc` file for easier access over a limited study area.
+Use these bounding boxes for areas you are actively studying.
+
+## Example usage
+
+```python
+import xarray as xr
+import matplotlib.pyplot as plt
+
+ds = xr.open_mfdataset( # requires dask
+    "/Volumes/research/jd82/NEXRAD/Houston_Woodlands_Galveston/2017/08/17/*.nc", # or similar
+    concat_dim="time", # specify how to combine the files
+    combine="nested",
+    decode_timedelta=False, # or else you'll get a warning
+)
+ds.mean(dim="time")["unknown"].plot()
+plt.show()
+```
 
 ## About this data
+
+There are missing values in the NEXRAD data.
+We handle these by skipping them.
+If you run into an error with a date you think is missing, please add it to `MISSING_SNAPSHOTS` in [the utility](nexrad_utils/const.py).
 
 ### Email 2022-07-07
 

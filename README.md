@@ -69,8 +69,12 @@ sudo mount.cifs -o username=jd82,domain=ADRICE,mfsymlinks,rw,vers=3.0,sign,uid=j
 ```
 
 will mount the RDF to `$HOME/RDF` for user `jd82`.
-If you copy and paste, be aware that this documentation doesn't make very clear that you need to change the `uid`.
-You can find this with the `id` command.
+If you copy and paste, be aware that this documentation doesn't make very clear that you need to change the `uid` as well as the `username`.
+As another example, if your username is `js336`, then you would run the following command to mount the RDF to the `$HOME/RDF` directory:
+
+```shell
+sudo mount.cifs -o username=js336,domain=ADRICE,mfsymlinks,rw,vers=3.0,sign,uid=js336 //smb.rdf.rice.edu/research $HOME/RDF
+```
 
 ### Running codes
 
