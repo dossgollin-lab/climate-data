@@ -11,6 +11,7 @@ dependencies:
   - ipython # for interactive exploring
   - jupyter
   - mypy # type checking
+  - netcdf4
   - pylint # catch errors before you make them
   - snakemake # workflow management engine
   - snakefmt # format snakefiles correctly
